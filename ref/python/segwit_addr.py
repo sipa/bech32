@@ -76,19 +76,12 @@ def convertbits(data, frombits, tobits, pad=True):
     return ret
 
 
-def encode(testnet, witver, witprog):
-    """Encode a segwit address."""
-    hrp = "tb" if testnet else "bc"
-    return bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5))
-
-
-def decode(testnet, addr):
+def decode(hrp, addr):
     """Decode a segwit address."""
-    hrpexp = "tb" if testnet else "bc"
-    hrp, data = bech32_decode(addr.lower())
+    hrpgot, data = bech32_decode(addr.lower())
     if ((any(ord(x) < 31 or ord(x) > 127 for x in addr)) or
             (addr.lower() != addr and addr.upper() != addr) or
-            hrp != hrpexp):
+            hrpgot != hrp):
         return (None, None)
     decoded = convertbits(data[1:], 5, 8, False)
     if decoded is None or len(decoded) < 2 or len(decoded) > 40:
@@ -98,3 +91,11 @@ def decode(testnet, addr):
     if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
         return (None, None)
     return (data[0], decoded)
+
+
+def encode(hrp, witver, witprog):
+    """Encode a segwit address."""
+    ret = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5))
+    assert decode(hrp, ret) is not (None, None)
+    return ret
+
