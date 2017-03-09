@@ -108,6 +108,10 @@ int main(void) {
         int witver;
         const char* hrp = "bc";
         int ok = 1;
+        uint8_t scriptpubkey[42];
+        size_t scriptpubkey_len;
+        char rebuild[93];
+        int p = 0;
         int ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp, valid_address[i].address);
         if (!ret) {
             hrp = "tb";
@@ -117,19 +121,15 @@ int main(void) {
             printf("segwit_addr_decode fails: '%s'\n", valid_address[i].address);
             ok = 0;
         }
-        uint8_t scriptpubkey[42];
-        size_t scriptpubkey_len;
         if (ok) segwit_scriptpubkey(scriptpubkey, &scriptpubkey_len, witver, witprog, witprog_len);
         if (ok && (scriptpubkey_len != valid_address[i].scriptPubKeyLen || memcmp(scriptpubkey, valid_address[i].scriptPubKey, scriptpubkey_len))) {
             printf("segwit_addr_decode produces wrong result: '%s'\n", valid_address[i].address);
             ok = 0;
         }
-        char rebuild[93];
         if (ok && !segwit_addr_encode(rebuild, hrp, witver, witprog, witprog_len)) {
             printf("segwit_addr_encode fails: '%s'\n", valid_address[i].address);
             ok = 0;
         }
-        int p = 0;
         while (ok && p < 93) {
             int c = valid_address[i].address[p];
             if (c >= 'A' && c <= 'Z') c = (c - 'A') + 'a';
