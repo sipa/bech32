@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "segwit_addr.h"
 
@@ -70,7 +69,7 @@ int32_t bech32_decode_fault(size_t *hrp_len, uint8_t *data, size_t *data_len, co
     while (*data_len < input_len && input[(input_len - 1) - *data_len] != '1') {
         ++(*data_len);
     }
-    *hrp_len = input_len - *data_len - 1;
+    *hrp_len = input_len - (1 + *data_len);
     if (*hrp_len < 1 || *data_len < 6) {
         return -2;
     }
@@ -96,7 +95,7 @@ int32_t bech32_decode_fault(size_t *hrp_len, uint8_t *data, size_t *data_len, co
         }
         chk = bech32_polymod_step(chk) ^ v;
         if (i + 6 < input_len) {
-            data[i - *hrp_len - 1] = v;
+            data[i - (1 + *hrp_len)] = v;
         }
         ++i;
     }

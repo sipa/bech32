@@ -87,16 +87,51 @@ static void segwit_scriptpubkey(uint8_t* scriptpubkey, size_t* scriptpubkeylen, 
     *scriptpubkeylen = witprog_len + 2;
 }
 
+int my_strncasecmp(const char *s1, const char *s2, size_t n) {
+    size_t i = 0;
+    while (i < n) {
+        char c1 = s1[i];
+        char c2 = s2[i];
+        if (c1 >= 'A' && c1 <= 'Z') c1 = (c1 - 'A') + 'a';
+        if (c2 >= 'A' && c2 <= 'Z') c2 = (c2 - 'A') + 'a';
+        if (c1 < c2) return -1;
+        if (c1 > c2) return 1;
+        if (c1 == 0) return 0;
+        ++i;
+    }
+    return 0;
+}
+
 int main(void) {
     size_t i;
     int fail = 0;
     for (i = 0; i < sizeof(valid_checksum) / sizeof(valid_checksum[0]); ++i) {
+        char original[92];
         uint8_t data[82];
+        char rebuild[92];
         size_t data_len;
         size_t hrp_len;
         int ok = 1;
-        if (!bech32_decode(&hrp_len, data, &data_len, valid_checksum[i])) {
-            printf("bech32_decode fails: '%s'\n", valid_checksum[i]);
+        strncpy(original, valid_checksum[i], 92);
+        original[strlen(original) - 1] ^= 1;
+        if (bech32_decode(&hrp_len, data, &data_len, original)) {
+            printf("bech32_decode succeeds on invalid data: '%s'\n", original);
+            ok = 0;
+        }
+        original[strlen(original) - 1] ^= 1;
+        if (!bech32_decode(&hrp_len, data, &data_len, original)) {
+            printf("bech32_decode fails: '%s'\n", original);
+            ok = 0;
+        }
+        if (ok) {
+            original[hrp_len] = 0;
+            if (!bech32_encode(rebuild, original, data, data_len)) {
+                printf("bech32_encode fails: '%s'\n", valid_checksum[i]);
+                ok = 0;
+            }
+        }
+        if (ok && my_strncasecmp(rebuild, valid_checksum[i], 92)) {
+            printf("bech32_encode produces incorrect result: '%s'\n", valid_checksum[i]);
             ok = 0;
         }
         fail += !ok;
@@ -110,7 +145,6 @@ int main(void) {
         uint8_t scriptpubkey[42];
         size_t scriptpubkey_len;
         char rebuild[93];
-        int p = 0;
         int ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp, valid_address[i].address);
         if (!ret) {
             hrp = "tb";
@@ -129,15 +163,9 @@ int main(void) {
             printf("segwit_addr_encode fails: '%s'\n", valid_address[i].address);
             ok = 0;
         }
-        while (ok && p < 93) {
-            int c = valid_address[i].address[p];
-            if (c >= 'A' && c <= 'Z') c = (c - 'A') + 'a';
-            if (c != rebuild[p]) {
-                printf("segwit_addr_encode produces wrong result: '%s'\n", valid_address[i].address);
-                ok = 0;
-            }
-            if (rebuild[p] == 0) break;
-            ++p;
+        if (ok && my_strncasecmp(valid_address[i].address, rebuild, 93)) {
+            printf("segwit_addr_encode produces wrong result: '%s'\n", valid_address[i].address);
+            ok = 0;
         }
         fail += !ok;
     }
