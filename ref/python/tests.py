@@ -43,8 +43,10 @@ INVALID_ADDRESS = [
 ]
 
 class TestSegwitAddress(unittest.TestCase):
+    """Unit test class for segwit addressess."""
 
     def test_checksum(self):
+        """Test checksum creation and validation."""
         for test in VALID_CHECKSUM:
             hrp, _ = segwit_addr.bech32_decode(test)
             self.assertIsNotNone(hrp)
@@ -54,6 +56,7 @@ class TestSegwitAddress(unittest.TestCase):
             self.assertIsNone(hrp)
 
     def test_valid_address(self):
+        """Test whether valid addresses decode to the correct output."""
         for (address, hexscript) in VALID_ADDRESS:
             hrp = "bc"
             witver, witprog = segwit_addr.decode(hrp, address)
@@ -67,10 +70,11 @@ class TestSegwitAddress(unittest.TestCase):
             self.assertEqual(address.lower(), addr)
 
     def test_invalid_address(self):
+        """Test whether invalid addresses fail to decode."""
         for test in INVALID_ADDRESS:
-            witver, witprog = segwit_addr.decode("bc", test)
+            witver, _ = segwit_addr.decode("bc", test)
             self.assertIsNone(witver)
-            witver, witprog = segwit_addr.decode("tb", test)
+            witver, _ = segwit_addr.decode("tb", test)
             self.assertIsNone(witver)
 
 if __name__ == "__main__":
