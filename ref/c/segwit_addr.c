@@ -6,7 +6,7 @@
 #include "segwit_addr.h"
 
 uint32_t bech32_polymod_step(uint32_t pre) {
-    int b = pre >> 25;
+    uint8_t b = pre >> 25;
     return ((pre & 0x1FFFFFF) << 5) ^
         (-((b >> 0) & 1) & 0x3b6a57b2UL) ^
         (-((b >> 1) & 1) & 0x26508e6dUL) ^
@@ -67,7 +67,7 @@ int32_t bech32_decode_fault(size_t *hrp_len, uint8_t *data, size_t *data_len, co
         return -1;
     }
     *data_len = 0;
-    while (*data_len < input_len && input[input_len - 1 - *data_len] != '1') {
+    while (*data_len < input_len && input[(input_len - 1) - *data_len] != '1') {
         ++(*data_len);
     }
     *hrp_len = input_len - *data_len - 1;

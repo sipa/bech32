@@ -96,8 +96,7 @@ int main(void) {
         size_t hrp_len;
         int ok = 1;
         if (!bech32_decode(&hrp_len, data, &data_len, valid_checksum[i])) {
-            int32_t fault = bech32_decode_fault(&hrp_len, data, &data_len, valid_checksum[i]);
-            printf("bech32_decode fails: '%s': %i\n", valid_checksum[i], (int)fault);
+            printf("bech32_decode fails: '%s'\n", valid_checksum[i]);
             ok = 0;
         }
         fail += !ok;
