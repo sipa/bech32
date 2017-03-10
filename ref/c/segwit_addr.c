@@ -76,7 +76,7 @@ int32_t bech32_decode_fault(size_t *hrp_len, uint8_t *data, size_t *data_len, co
     }
     *(data_len) -= 6;
     for (i = 0; i < *hrp_len; ++i) {
-        if (input[i] < 32 || input[i] > 127) {
+        if (input[i] < 33 || input[i] > 126) {
             return -3;
         }
         chk = bech32_polymod_step(chk) ^ (input[i] >> 5);
@@ -87,7 +87,7 @@ int32_t bech32_decode_fault(size_t *hrp_len, uint8_t *data, size_t *data_len, co
     }
     ++i;
     while (i < input_len) {
-        int v = input[i] & 0x80 ? -2 : charset_rev[(int)input[i]];
+        int v = (input[i] & 0x80) ? -2 : charset_rev[(int)input[i]];
         if (v == -1) {
             return -4;
         }
@@ -141,7 +141,7 @@ int segwit_addr_encode(char *output, const char *hrp, uint8_t witver, const uint
     return bech32_encode(output, hrp, data, datalen);
 }
 
-int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr) {
+int segwit_addr_decode_fault(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr, int32_t* fault) {
     uint8_t data[84];
     char addr_lower[93];
     size_t data_len;
@@ -149,6 +149,7 @@ int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const
     size_t pos = 0;
     int have_lower = 0;
     int have_upper = 0;
+    int32_t faultv;
     while (pos < 93) {
         char ch = addr[pos];
         if (ch >= 'A' && ch <= 'Z') {
@@ -163,7 +164,9 @@ int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const
     }
     if (pos == 93) return 0;
     if (have_lower && have_upper) return 0;
-    if (!bech32_decode(&hrp_len, data, &data_len, addr_lower)) return 0;
+    faultv = bech32_decode_fault(&hrp_len, data, &data_len, addr_lower);
+    if (fault) *fault = faultv;
+    if (faultv) return 0;
     if (data_len == 0 || data_len > 65) return 0;
     if (strlen(hrp) != hrp_len) return 0;
     if (memcmp(hrp, addr_lower, hrp_len) != 0) return 0;
@@ -174,4 +177,8 @@ int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const
     if (data[0] == 0 && *witdata_len != 20 && *witdata_len != 32) return 0;
     *witver = data[0];
     return 1;
+}
+
+int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr) {
+    return segwit_addr_decode_fault(witver, witdata, witdata_len, hrp, addr, NULL);
 }
