@@ -106,7 +106,7 @@ int main(void) {
     size_t i;
     int fail = 0;
     for (i = 0; i < sizeof(valid_checksum) / sizeof(valid_checksum[0]); ++i) {
-        char original[92];
+        char original[93] = {0};
         uint8_t data[82];
         char rebuild[92];
         size_t data_len;
