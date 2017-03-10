@@ -3,7 +3,7 @@
 """Reference tests for segwit adresses"""
 
 import binascii
-
+import unittest
 import segwit_addr
 
 def segwit_scriptpubkey(witver, witprog):
@@ -42,33 +42,37 @@ INVALID_ADDRESS = [
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
 ]
 
-def run_tests():
-    """Run unit tests."""
-    for test in VALID_CHECKSUM:
-        hrp, _ = segwit_addr.bech32_decode(test)
-        assert hrp is not None
-        pos = test.rfind('1')
-        test = test[:pos+1] + chr(ord(test[pos + 1]) ^ 1) + test[pos+2:]
-        hrp, _ = segwit_addr.bech32_decode(test)
-        assert hrp is None
+class TestSegwitAddress(unittest.TestCase):
 
-    for test in VALID_ADDRESS:
-        hrp = "bc"
-        witver, witprog = segwit_addr.decode(hrp, test[0])
-        if witver is None:
-            hrp = "tb"
-            witver, witprog = segwit_addr.decode(hrp, test[0])
-        assert witver is not None
-        scriptpubkey = segwit_scriptpubkey(witver, witprog)
-        assert scriptpubkey == binascii.unhexlify(test[1])
-        addr = segwit_addr.encode(hrp, witver, witprog)
-        assert test[0].lower() == addr
+    def test_checksum(self):
+        for test in VALID_CHECKSUM:
+            hrp, _ = segwit_addr.bech32_decode(test)
+            self.assertIsNotNone(hrp)
+            pos = test.rfind('1')
+            test = test[:pos+1] + chr(ord(test[pos + 1]) ^ 1) + test[pos+2:]
+            hrp, _ = segwit_addr.bech32_decode(test)
+            self.assertIsNone(hrp)
 
-    for test in INVALID_ADDRESS:
-        witver, witprog = segwit_addr.decode("bc", test)
-        assert witver is None
-        witver, witprog = segwit_addr.decode("tb", test)
-        assert witver is None
+    def test_valid_address(self):
+        for (address, hexscript) in VALID_ADDRESS:
+            hrp = "bc"
+            witver, witprog = segwit_addr.decode(hrp, address)
+            if witver is None:
+                hrp = "tb"
+                witver, witprog = segwit_addr.decode(hrp, address)
+            self.assertIsNotNone(witver)
+            scriptpubkey = segwit_scriptpubkey(witver, witprog)
+            self.assertEqual(scriptpubkey, binascii.unhexlify(hexscript))
+            addr = segwit_addr.encode(hrp, witver, witprog)
+            self.assertEqual(address.lower(), addr)
+
+    def test_invalid_address(self):
+        for test in INVALID_ADDRESS:
+            witver, witprog = segwit_addr.decode("bc", test)
+            self.assertIsNone(witver)
+            witver, witprog = segwit_addr.decode("tb", test)
+            self.assertIsNone(witver)
 
 if __name__ == "__main__":
-    run_tests()
+    unittest.main()
+
