@@ -165,7 +165,7 @@ int segwit_addr_decode_fault(int* witver, uint8_t* witdata, size_t* witdata_len,
     if (have_lower && have_upper) return 0;
     faultv = bech32_decode_fault(&hrp_len, data, &data_len, addr_lower);
     if (fault) *fault = faultv;
-    if (faultv) return 0;
+    if (faultv < 0) return 0;
     if (data_len == 0 || data_len > 65) return 0;
     if (strlen(hrp) != hrp_len) return 0;
     if (memcmp(hrp, addr_lower, hrp_len) != 0) return 0;
@@ -179,5 +179,6 @@ int segwit_addr_decode_fault(int* witver, uint8_t* witdata, size_t* witdata_len,
 }
 
 int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr) {
-    return segwit_addr_decode_fault(witver, witdata, witdata_len, hrp, addr, NULL);
+    int32_t fault;
+    return segwit_addr_decode_fault(witver, witdata, witdata_len, hrp, addr, &fault) && fault == 0;
 }
