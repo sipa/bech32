@@ -14,7 +14,7 @@ function locate_errors(hrp, address) {
     var witver = Module._malloc(8);
     var witdata = Module._malloc(84);
     var witdata_len = Module._malloc(8);
-    var fault = bech32_addr_decode_fault(witver, witdata, witdata_len, hrp, address)
+    var fault = segwit_addr_decode_fault(witver, witdata, witdata_len, hrp, address)
     Module._free(witdata_len);
     Module._free(witdata);
     Module._free(witver);
@@ -45,6 +45,8 @@ function update_status() {
 <h3>Segwit address demo</h3>
 <input type="text" id="address" maxlength="74" onchange="update_status();" />
 
-<a id="status" />
+<a id="result"></a>
+
+<input type="button" onclick="update_status();" />
 </body>
 </html>
