@@ -1,6 +1,9 @@
 """Reference implementation for Bech32 and segwit addresses."""
 
 
+CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+
+
 def bech32_polymod(values):
     """Internal function that computes the Bech32 checksum."""
     generator = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
@@ -28,8 +31,6 @@ def bech32_create_checksum(hrp, data):
     values = bech32_hrp_expand(hrp) + data
     polymod = bech32_polymod(values + [0, 0, 0, 0, 0, 0]) ^ 1
     return [(polymod >> 5 * (5 - i)) & 31 for i in range(6)]
-
-CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
 
 def bech32_encode(hrp, data):
@@ -98,4 +99,3 @@ def encode(hrp, witver, witprog):
     ret = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5))
     assert decode(hrp, ret) is not (None, None)
     return ret
-
