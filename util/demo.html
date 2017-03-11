@@ -7,8 +7,8 @@
 <body>
 <script src="asm.js" type="text/javascript"></script>
 <script type="text/javascript">
-segwit_addr_decode_fault = Module.cwrap('segwit_addr_decode_fault', 'number', ['number', 'number', 'number', 'string', 'string'])
-bech32_locate_errors = Module.cwrap('bech32_locate_errors', 'number', ['number'])
+segwit_addr_decode_fault = Module.cwrap('segwit_addr_decode_fault', 'number', ['number', 'number', 'number', 'string', 'string']);
+bech32_locate_errors = Module.cwrap('bech32_locate_errors', 'number', ['number', 'number']);
 
 function locate_errors(hrp, address) {
     var witver = Module._malloc(8);
@@ -19,7 +19,7 @@ function locate_errors(hrp, address) {
     Module._free(witdata);
     Module._free(witver);
     if (fault >= 0) {
-        return bech32_locate_errors(fault);
+        return bech32_locate_errors(fault, 71);
     } else {
         return -1;
     }
@@ -43,10 +43,10 @@ function update_status() {
 }
 </script>
 <h3>Segwit address demo</h3>
-<input type="text" id="address" maxlength="74" onchange="update_status();" />
+<p><input type="text" id="address" maxlength="74" oninput="update_status();" /></p>
 
-<a id="result"></a>
+<p><a id="result"></a></p>
 
-<input type="button" onclick="update_status();" />
+<p><input type="button" onclick="update_status();" /></p>
 </body>
 </html>
