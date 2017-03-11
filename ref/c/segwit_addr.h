@@ -3,6 +3,22 @@
 
 #include <stdint.h>
 
+int segwit_addr_encode(
+    char *output,
+    const char *hrp,
+    uint8_t witver,
+    const uint8_t *witprog,
+    size_t witprog_len
+);
+
+int segwit_addr_decode(
+    int* witver,
+    uint8_t* witprog,
+    size_t* witprog_len,
+    const char* hrp,
+    const char* addr
+);
+
 /** Encode a Bech32 string
  *
  *  Out: output:  Pointer to a buffer of size strlen(hrp) + data_len + 8.
@@ -37,20 +53,13 @@ int bech32_decode(
     const char *input
 );
 
-int segwit_addr_encode(
-    char *output,
-    const char *hrp,
-    uint8_t witver,
-    const uint8_t *witprog,
-    size_t witprog_len
-);
-
-int segwit_addr_decode(
+int segwit_addr_decode_fault(
     int* witver,
-    uint8_t* witprog,
-    size_t* witprog_len,
+    uint8_t* witdata,
+    size_t* witdata_len,
     const char* hrp,
-    const char* addr
+    const char* addr,
+    int32_t* fault
 );
 
 #endif
