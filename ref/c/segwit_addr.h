@@ -53,13 +53,12 @@ int bech32_decode(
     const char *input
 );
 
-int segwit_addr_decode_fault(
+int32_t segwit_addr_decode_fault(
     int* witver,
     uint8_t* witdata,
     size_t* witdata_len,
     const char* hrp,
-    const char* addr,
-    int32_t* fault
+    const char* addr
 );
 
 #endif

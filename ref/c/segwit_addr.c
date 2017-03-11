@@ -140,7 +140,7 @@ int segwit_addr_encode(char *output, const char *hrp, uint8_t witver, const uint
     return bech32_encode(output, hrp, data, datalen);
 }
 
-int segwit_addr_decode_fault(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr, int32_t* fault) {
+int32_t segwit_addr_decode_fault(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr) {
     uint8_t data[84];
     char addr_lower[93];
     size_t data_len;
@@ -161,24 +161,22 @@ int segwit_addr_decode_fault(int* witver, uint8_t* witdata, size_t* witdata_len,
         if (ch == 0) break;
         ++pos;
     }
-    if (pos == 93) return 0;
-    if (have_lower && have_upper) return 0;
+    if (pos == 93) return -1;
+    if (have_lower && have_upper) return -1;
     faultv = bech32_decode_fault(&hrp_len, data, &data_len, addr_lower);
-    if (fault) *fault = faultv;
-    if (faultv < 0) return 0;
-    if (data_len == 0 || data_len > 65) return 0;
-    if (strlen(hrp) != hrp_len) return 0;
-    if (memcmp(hrp, addr_lower, hrp_len) != 0) return 0;
-    if (data[0] > 16) return 0;
+    if (faultv < 0) return -1;
+    if (data_len == 0 || data_len > 65) return -1;
+    if (strlen(hrp) != hrp_len) return -1;
+    if (memcmp(hrp, addr_lower, hrp_len) != 0) return -1;
+    if (data[0] > 16) return -1;
     *witdata_len = 0;
-    if (!convert_bits(witdata, witdata_len, 8, data + 1, data_len - 1, 5, 0)) return 0;
-    if (*witdata_len < 2 || *witdata_len > 40) return 0;
-    if (data[0] == 0 && *witdata_len != 20 && *witdata_len != 32) return 0;
+    if (!convert_bits(witdata, witdata_len, 8, data + 1, data_len - 1, 5, 0)) return -1;
+    if (*witdata_len < 2 || *witdata_len > 40) return -1;
+    if (data[0] == 0 && *witdata_len != 20 && *witdata_len != 32) return -1;
     *witver = data[0];
-    return 1;
+    return faultv;
 }
 
 int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr) {
-    int32_t fault;
-    return segwit_addr_decode_fault(witver, witdata, witdata_len, hrp, addr, &fault) && fault == 0;
+    return segwit_addr_decode_fault(witver, witdata, witdata_len, hrp, addr) == 0;
 }

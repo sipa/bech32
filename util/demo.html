@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Segwit address error locator demo</title>
+</head>
+<body>
+<script src="asm.js" type="text/javascript"></script>
+<script type="text/javascript">
+segwit_addr_decode_fault = Module.cwrap('segwit_addr_decode_fault', 'number', ['number', 'number', 'number', 'string', 'string'])
+bech32_locate_errors = Module.cwrap('bech32_locate_errors', 'number', ['number'])
+
+function locate_errors(hrp, address) {
+    var witver = Module._malloc(8);
+    var witdata = Module._malloc(84);
+    var witdata_len = Module._malloc(8);
+    var fault = bech32_addr_decode_fault(witver, witdata, witdata_len, hrp, address)
+    Module._free(witdata_len);
+    Module._free(witdata);
+    Module._free(witver);
+    if (fault >= 0) {
+        return bech32_locate_errors(fault);
+    } else {
+        return -1;
+    }
+}
+
+function update_status() {
+    var errors = locate_errors("bc", document.getElementById("address").value);
+    if (errors == 0) {
+        document.getElementById("result").innerHTML = "OK";
+    } else if (errors < 0) {
+        document.getElementById("result").innerHTML = "Invalid";
+    } else {
+        var e1 = (errors & 0xFF);
+        var e2 = (errors >> 8);
+        if (e2 == 0) {
+            document.getElementById("result").innerHTML = "Likely error on position " + (e1 - 1);
+        } else {
+            document.getElementById("result").innerHTML = "Likely error on position " + (e1 - 1) + " and " + (e2 - 1);
+        }
+    }
+}
+</script>
+<h3>Segwit address demo</h3>
+<input type="text" id="address" maxlength="74" onchange="update_status();" />
+
+<a id="status" />
+</body>
+</html>

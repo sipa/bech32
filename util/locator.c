@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 
 static const uint16_t gf1024_exp[1024] = {
     1, 303, 635, 446, 997, 640, 121, 142, 959, 420, 350, 438, 166, 39, 543,
@@ -200,7 +201,7 @@ int bech32_locate_errors(uint32_t fault, int length)
 
     for (p1 = 0; p1 < length; p1++) {
         int s1_s0p1, l_s1_s0p1, p2, s1_s0p2, inv_p1_p2, l_e2, l_e1;
-        int s2_s1p1 = s2 ^ (s1 == 0 ? 0 : gf1024_exp[(l_s1 + p1) % 1023])
+        int s2_s1p1 = s2 ^ (s1 == 0 ? 0 : gf1024_exp[(l_s1 + p1) % 1023]);
         if (s2_s1p1 == 0) continue;
         s1_s0p1 = s1 ^ (s0 == 0 ? 0 : gf1024_exp[(l_s0 + p1) % 1023]);
         if (s1_s0p1 == 0) continue;
