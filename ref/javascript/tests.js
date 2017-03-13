@@ -76,9 +76,12 @@ var INVALID_ADDRESS = [
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
 ];
 
+var didPassTests = true;
+
 for (var p = 0; p < VALID_CHECKSUM.length; ++p) {
     var test = VALID_CHECKSUM[p];
     var ret = bech32.decode(test);
+    didPassTests = didPassTests && !!ret;
     console.log("Valid checksum for " + test + ": " + (ret === null ? "fail" : "ok"));
 }
 
@@ -102,11 +105,20 @@ for (var p = 0; p < VALID_ADDRESS.length; ++p) {
         var recreate = segwit_addr.encode(hrp, ret.version, ret.program);
         ok = (recreate === address.toLowerCase());
     }
+    didPassTests = didPassTests && !!ok;
     console.log("Valid address " + address + ": " + (ok ? "ok" : "FAIL"));
 }
 
 for (var p = 0; p < INVALID_ADDRESS.length; ++p) {
     var test = INVALID_ADDRESS[p];
     var ok = segwit_addr.decode("bc", test) === null && segwit_addr.decode("tb", test) === null;
+    didPassTests = didPassTests && !!ok;
     console.log("Invalid address " + test + ": " + (ok ? "ok" : "FAIL"));
+}
+
+if (!didPassTests) {
+    console.error();
+    console.error('Failed tests');
+    console.error();
+    process.exit(1);
 }
