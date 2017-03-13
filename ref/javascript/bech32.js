@@ -1,11 +1,9 @@
-var BECH32_CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
-var BECH32_GENERATOR = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+var CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+var GENERATOR = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
 
 module.exports = {
   decode: decode,
   encode: encode,
-  BECH32_CHARSET: BECH32_CHARSET,
-  BECH32_GENERATOR: BECH32_GENERATOR
 };
 
 function polymod (values) {
@@ -15,7 +13,7 @@ function polymod (values) {
     chk = (chk & 0x1ffffff) << 5 ^ values[p];
     for (var i = 0; i < 5; ++i) {
       if ((top >> i) & 1) {
-        chk ^= BECH32_GENERATOR[i];
+        chk ^= GENERATOR[i];
       }
     }
   }
@@ -53,7 +51,7 @@ function encode (hrp, data) {
   var combined = data.concat(createChecksum(hrp, data));
   var ret = hrp + '1';
   for (var p = 0; p < combined.length; ++p) {
-    ret += BECH32_CHARSET.charAt(combined[p]);
+    ret += CHARSET.charAt(combined[p]);
   }
   return ret;
 }
@@ -72,7 +70,7 @@ function decode (bechString) {
   var hrp = bechString.substring(0, pos);
   var data = [];
   for (p = pos + 1; p < bechString.length; ++p) {
-    var d = BECH32_CHARSET.indexOf(bechString.charAt(p));
+    var d = CHARSET.indexOf(bechString.charAt(p));
     if (d === -1) {
       return null;
     }
