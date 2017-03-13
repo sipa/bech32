@@ -1,6 +1,8 @@
 var bech32 = require('./bech32');
 
 module.exports = {
+  bech32_encode: bech32.encode,
+  bech32_decode: bech32.decode,
   encode: encode,
   decode: decode
 };
