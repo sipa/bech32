@@ -1,4 +1,6 @@
+///@TODO: Use tape instead of pure js for tests, requires adding a package.json to manage to dependency
 var segwit_addr = require('./segwit_addr.js');
+var bech32 = require('./bech32');
 
 function segwit_scriptpubkey(version, program) {
     return [version ? version + 0x80 : 0, program.length].concat(program);
