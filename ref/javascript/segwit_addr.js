@@ -33,22 +33,7 @@ function convertbits (data, frombits, tobits, pad) {
 }
 
 function decode (hrp, addr) {
-  var hasLower = false;
-  var hasUpper = false;
-  for (var p = 0; p < addr.length; ++p) {
-    var c = addr.charAt(p);
-    if (c >= 'a' && c <= 'z') {
-      hasLower = true;
-    } else if (c >= 'A' && c <= 'Z') {
-      hasUpper = true;
-    } else if (!(c >= '0' && c <= '9')) {
-      return null;
-    }
-  }
-  if (hasLower && hasUpper) {
-    return null;
-  }
-  var dec = bech32.decode(addr.toLowerCase());
+  var dec = bech32.decode(addr);
   if (dec === null || dec.hrp !== hrp || dec.data.length < 1 || dec.data[0] > 16) {
     return null;
   }

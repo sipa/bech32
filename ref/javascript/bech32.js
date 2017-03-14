@@ -6,6 +6,7 @@ module.exports = {
   encode: encode,
 };
 
+
 function polymod (values) {
   var chk = 1;
   for (var p = 0; p < values.length; ++p) {
@@ -58,11 +59,21 @@ function encode (hrp, data) {
 
 function decode (bechString) {
   var p;
+  var has_lower = false;
+  var has_upper = false;
   for (p = 0; p < bechString.length; ++p) {
     if (bechString.charCodeAt(p) < 32 || bechString.charCodeAt(p) > 126) {
       return null;
     }
+    if (bechString.charAt(p) >= 'a' && bechString.charAt(p) <= 'z') {
+        has_lower = true;
+    }
+    if (bechString.charAt(p) >= 'A' && bechString.charAt(p) <= 'Z') {
+        has_lower = true;
+    }
   }
+  if (has_lower && has_upper) return null;
+  bechString = bechString.toLowerCase();
   var pos = bechString.lastIndexOf('1');
   if (pos < 1 || pos + 7 > bechString.length || bechString.length > 90) {
     return null;
