@@ -212,7 +212,7 @@ function locate_errors (residue, length) {
     var inv_p1_p2 = 1023 - GF1024_LOG[GF1024_EXP[p1] ^ GF1024_EXP[p2]];
     var l_e2 = l_s1_s0p1 + inv_p1_p2 + (1023 - 997) * p2;
     if (l_e2 % 33) continue;
-    var l_e1 = gf1024_log[s1_s0p2] + inv_p1_p2 + (1023 - 997) * p1;
+    var l_e1 = GF1024_LOG[s1_s0p2] + inv_p1_p2 + (1023 - 997) * p1;
     if (l_e1 % 33) continue;
     if (p1 < p2) {
       return [p1, p2];
