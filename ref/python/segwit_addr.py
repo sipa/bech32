@@ -39,17 +39,19 @@ def bech32_encode(hrp, data):
     return hrp + '1' + ''.join([CHARSET[d] for d in combined])
 
 
-def bech32_decode(bech_string):
+def bech32_decode(bech):
     """Validate a Bech32 string, and determine HRP and data."""
-    if any(ord(x) < 31 or ord(x) > 127 for x in bech_string):
+    if ((any(ord(x) < 33 or ord(x) > 126 for x in bech)) or
+            (bech.lower() != bech and bech.upper() != bech)):
         return (None, None)
-    pos = bech_string.rfind('1')
-    if pos < 1 or pos + 7 > len(bech_string) or len(bech_string) > 90:
+    bech = bech.lower();
+    pos = bech.rfind('1')
+    if pos < 1 or pos + 7 > len(bech) or len(bech) > 90:
         return (None, None)
-    if not all(x in CHARSET for x in bech_string[pos+1:]):
+    if not all(x in CHARSET for x in bech[pos+1:]):
         return (None, None)
-    hrp = bech_string[:pos]
-    data = [CHARSET.find(x) for x in bech_string[pos+1:]]
+    hrp = bech[:pos]
+    data = [CHARSET.find(x) for x in bech[pos+1:]]
     if not bech32_verify_checksum(hrp, data):
         return (None, None)
     return (hrp, data[:-6])
@@ -79,10 +81,8 @@ def convertbits(data, frombits, tobits, pad=True):
 
 def decode(hrp, addr):
     """Decode a segwit address."""
-    hrpgot, data = bech32_decode(addr.lower())
-    if ((any(ord(x) < 31 or ord(x) > 127 for x in addr)) or
-            (addr.lower() != addr and addr.upper() != addr) or
-            hrpgot != hrp):
+    hrpgot, data = bech32_decode(addr)
+    if (hrpgot != hrp):
         return (None, None)
     decoded = convertbits(data[1:], 5, 8, False)
     if decoded is None or len(decoded) < 2 or len(decoded) > 40:

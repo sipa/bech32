@@ -5,7 +5,7 @@
 #include "segwit_addr.h"
 
 static const char* valid_checksum[] = {
-    "a12uel5l",
+    "A12UEL5L",
     "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
     "abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
     "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j",
@@ -106,26 +106,17 @@ int main(void) {
     size_t i;
     int fail = 0;
     for (i = 0; i < sizeof(valid_checksum) / sizeof(valid_checksum[0]); ++i) {
-        char original[93] = {0};
         uint8_t data[82];
         char rebuild[92];
+        char hrp[84];
         size_t data_len;
-        size_t hrp_len;
         int ok = 1;
-        strncpy(original, valid_checksum[i], 92);
-        original[strlen(original) - 1] ^= 1;
-        if (bech32_decode(&hrp_len, data, &data_len, original)) {
-            printf("bech32_decode succeeds on invalid data: '%s'\n", original);
-            ok = 0;
-        }
-        original[strlen(original) - 1] ^= 1;
-        if (!bech32_decode(&hrp_len, data, &data_len, original)) {
-            printf("bech32_decode fails: '%s'\n", original);
+        if (!bech32_decode(hrp, data, &data_len, valid_checksum[i])) {
+            printf("bech32_decode fails: '%s'\n", valid_checksum[i]);
             ok = 0;
         }
         if (ok) {
-            original[hrp_len] = 0;
-            if (!bech32_encode(rebuild, original, data, data_len)) {
+            if (!bech32_encode(rebuild, hrp, data, data_len)) {
                 printf("bech32_encode fails: '%s'\n", valid_checksum[i]);
                 ok = 0;
             }
