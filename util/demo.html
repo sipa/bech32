@@ -14,7 +14,7 @@ function update_status() {
     if (res === null) {
         document.getElementById("result").innerHTML = "Ok";
     } else {
-        document.getElementById("result").innerHTML = res.error;
+        document.getElementById("result").innerHTML = res.error + " (" + res.pos + ")";
         if (res.pos !== null) {
             var cp = "";
             for (var p = 0; p < address.length; ++p) {
