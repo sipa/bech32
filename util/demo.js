@@ -357,7 +357,7 @@ function check (addr) {
   if (dec.data[0] === 0 && res.length !== 20 && res.length !== 32) {
     return {error:"Invalid witness program length for v0", pos:null};
   }
-  return null;
+  return {error:null, hrp:dec.hrp};
 }
 
 },{"./bech32_ecc":1}]},{},[2])(2)
