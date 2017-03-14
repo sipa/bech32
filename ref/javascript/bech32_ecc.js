@@ -252,7 +252,7 @@ function hrpExpand (hrp) {
 
 function range (from, to) {
   var ret = [];
-  for (var i = from; i < to; ++t) {
+  for (var i = from; i < to; ++i) {
     ret.push(i);
   }
 }
