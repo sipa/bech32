@@ -62,7 +62,7 @@ function decode (bechString) {
   var has_lower = false;
   var has_upper = false;
   for (p = 0; p < bechString.length; ++p) {
-    if (bechString.charCodeAt(p) < 32 || bechString.charCodeAt(p) > 126) {
+    if (bechString.charCodeAt(p) < 33 || bechString.charCodeAt(p) > 126) {
       return null;
     }
     if (bechString.charCodeAt(p) >= 97 && bechString.charCodeAt(p) <= 122) {
