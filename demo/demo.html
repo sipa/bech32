@@ -17,6 +17,7 @@ function update_status() {
     var cp = "";
     if (res.error === null) {
         document.getElementById("result").innerHTML = "<a style=\"color:green\">Ok</a>";
+        cp = "<br/>";
     } else {
         document.getElementById("result").innerHTML = res.error;
         if (res.pos !== null) {
@@ -38,13 +39,19 @@ function update_status() {
                 <h3 class="card-header">SegWit address demo</h3>
                 <div class="card-block">
                     <div class="form-group row">
-                        <label for="lgFormGroupInput" class="col-sm-2 col-form-label col-form-label-lg">Adress</label>
+                        <label for="lgFormGroupInput" class="col-sm-2 col-form-label col-form-label-lg">Address</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control form-control-lg" id="address" placeholder="SegWit address" size="74" oninput="update_status();" />
+                            <input type="text" class="form-control form-control-lg" style="font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;" id="address" placeholder="SegWit address" size="74" oninput="update_status();" />
                         </div>
                     </div>
-                    <p><a id="result"></a></p>
-                    <p><a id="copy"></a></p>
+                    <p><a id="result"><br/></a></p>
+                    <p><span style="font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;"><a id="copy"><br/></a></span></p>
+                    Fill field with:
+                    <ul>
+                    <li> <a onclick='document.getElementById("address").value = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";update_status();' style="text-decoration:underline;font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;">bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4</a> (P2WPKH)
+                    <li> <a onclick='document.getElementById("address").value = "BC1QW508D6QEJXTDG4Y5R3ZARVAYR0C5XW7KV8F3T4";update_status();' style="text-decoration:underline;font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;">BC1QW508D6QEJXTDG4Y5R3ZARVAYR0C5XW7KV8F3T4</a> (P2WPKH with errors)
+                    <li> <a onclick='document.getElementById("address").value = "bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3";update_status();' style="text-decoration:underline;font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;">bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3</a> (P2WSH)
+                    </ul>
                 </div>
             </div>
         </div>
