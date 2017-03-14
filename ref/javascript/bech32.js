@@ -65,14 +65,16 @@ function decode (bechString) {
     if (bechString.charCodeAt(p) < 32 || bechString.charCodeAt(p) > 126) {
       return null;
     }
-    if (bechString.charAt(p) >= 'a' && bechString.charAt(p) <= 'z') {
+    if (bechString.charCodeAt(p) >= 97 && bechString.charCodeAt(p) <= 122) {
         has_lower = true;
     }
-    if (bechString.charAt(p) >= 'A' && bechString.charAt(p) <= 'Z') {
+    if (bechString.charCodeAt(p) >= 65 && bechString.charCodeAt(p) <= 90) {
         has_upper = true;
     }
   }
-  if (has_lower && has_upper) return null;
+  if (has_lower && has_upper) {
+    return null;
+  }
   bechString = bechString.toLowerCase();
   var pos = bechString.lastIndexOf('1');
   if (pos < 1 || pos + 7 > bechString.length || bechString.length > 90) {

@@ -71,7 +71,7 @@ var INVALID_ADDRESS = [
     "bc1rw5uspcuh",
     "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
     "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-    "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sI5k7",
+    "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
     "tb1pw508d6qejxtdg4y5r3zarqfsj6c3",
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
 ];
