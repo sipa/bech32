@@ -310,7 +310,7 @@ function check (bechString, validHrp) {
     }
     return {error:"Likely incorrect characters", pos:epos};
   }
-  return {error:null};
+  return {error:null, hrp:hrp, data:data.slice(0, -6)};
 }
 
 },{}],2:[function(require,module,exports){
