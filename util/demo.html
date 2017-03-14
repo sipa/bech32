@@ -8,9 +8,11 @@
 <script src="demo.js" type="text/javascript"></script>
 <script type="text/javascript">
 
+var bech32_ecc = require("./bech32_ecc");
+
 function update_status() {
     var address = document.getElementById("address").value;
-    var res = check(address);
+    var res = bech32_ecc.check(address);
     if (res === null) {
         document.getElementById("result").innerHTML = "Ok";
     } else {
