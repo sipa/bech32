@@ -251,9 +251,16 @@ function hrpExpand (hrp) {
   return ret;
 }
 
-function check (bechString) {
+function range (from, to) {
+  var ret = [];
+  for (var i = from; i < to; ++t) {
+    ret.push(i);
+  }
+}
+
+function check (bechString, validHrp) {
   if (bechString.length > 90) {
-      return {error:"Too long", pos:[90]};
+      return {error:"Too long", pos:range(90, bechString.length)};
   }
   var p;
   var has_lower = false;
@@ -288,6 +295,9 @@ function check (bechString) {
     }
     data.push(d);
   }
+  if (validHrp.indexOf(hrp) == -1) {
+    return {error:"Unknown part before the separator '1'", pos:range(0, hrp.length)};
+  }
   var residue = polymod(hrpExpand(hrp).concat(data)) ^ 1;
   if (residue != 0) {
     var epos = locate_errors(residue, bechString.length - 1);
@@ -299,7 +309,7 @@ function check (bechString) {
     }
     return {error:"Likely incorrect characters", pos:epos};
   }
-  return {error:null, hrp:hrp, data: data.slice(0,-6)};
+  return {error:null, data: data.slice(0,-6)};
 }
 
 },{}],2:[function(require,module,exports){
@@ -336,8 +346,8 @@ function convertbits (data, frombits, tobits, pad) {
   return ret;
 }
 
-function check (addr) {
-  var dec = bech32_ecc.check(addr);
+function check (addr, validHrp) {
+  var dec = bech32_ecc.check(addr, validHrp);
   if (dec.error !== null) {
     return {error:dec.error, pos:dec.pos};
   }
@@ -357,7 +367,7 @@ function check (addr) {
   if (dec.data[0] === 0 && res.length !== 20 && res.length !== 32) {
     return {error:"Invalid witness program length for v0", pos:null};
   }
-  return {error:null, hrp:dec.hrp};
+  return {error:null};
 }
 
 },{"./bech32_ecc":1}]},{},[2])(2)

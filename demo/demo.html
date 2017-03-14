@@ -10,14 +10,8 @@
 
 function update_status() {
     var address = document.getElementById("address").value;
-    var res = segwit_addr_ecc.check(address);
+    var res = segwit_addr_ecc.check(address, ["bc", "tb"]);
     var cp = "";
-    if (res.error === null) {
-        if (res.hrp != "bc" && res.hrp != "tb") {
-            res.error = "Unknown address type";
-            res.pos = [0,1];
-        }
-    }
     if (res.error === null) {
         document.getElementById("result").innerHTML = "<a style=\"color:green\">Ok</a>";
     } else {

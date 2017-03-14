@@ -250,9 +250,16 @@ function hrpExpand (hrp) {
   return ret;
 }
 
-function check (bechString) {
+function range (from, to) {
+  var ret = [];
+  for (var i = from; i < to; ++t) {
+    ret.push(i);
+  }
+}
+
+function check (bechString, validHrp) {
   if (bechString.length > 90) {
-      return {error:"Too long", pos:[90]};
+      return {error:"Too long", pos:range(90, bechString.length)};
   }
   var p;
   var has_lower = false;
@@ -287,6 +294,9 @@ function check (bechString) {
     }
     data.push(d);
   }
+  if (validHrp.indexOf(hrp) == -1) {
+    return {error:"Unknown part before the separator '1'", pos:range(0, hrp.length)};
+  }
   var residue = polymod(hrpExpand(hrp).concat(data)) ^ 1;
   if (residue != 0) {
     var epos = locate_errors(residue, bechString.length - 1);
@@ -298,5 +308,5 @@ function check (bechString) {
     }
     return {error:"Likely incorrect characters", pos:epos};
   }
-  return {error:null, hrp:hrp, data: data.slice(0,-6)};
+  return {error:null, data: data.slice(0,-6)};
 }

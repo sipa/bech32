@@ -31,8 +31,8 @@ function convertbits (data, frombits, tobits, pad) {
   return ret;
 }
 
-function check (addr) {
-  var dec = bech32_ecc.check(addr);
+function check (addr, validHrp) {
+  var dec = bech32_ecc.check(addr, validHrp);
   if (dec.error !== null) {
     return {error:dec.error, pos:dec.pos};
   }
@@ -52,5 +52,5 @@ function check (addr) {
   if (dec.data[0] === 0 && res.length !== 20 && res.length !== 32) {
     return {error:"Invalid witness program length for v0", pos:null};
   }
-  return {error:null, hrp:dec.hrp};
+  return {error:null};
 }
