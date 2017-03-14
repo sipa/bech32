@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Segwit address error locator demo</title>
-</head>
-<body>
-<script src="demo.js" type="text/javascript"></script>
-<script type="text/javascript">
+    <head>
+        <meta charset="UTF-8">
+        <title>Segwit address error locator demo</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    </head>
+    <body>
+        <script type="text/javascript">
 
 function update_status() {
     var address = document.getElementById("address").value;
@@ -29,10 +29,23 @@ function update_status() {
     document.getElementById("copy").innerHTML = cp;
 }
 </script>
-<h3>Segwit address demo</h3>
-<p><input type="text" id="address" size="74" oninput="update_status();" /></p>
-
-<p><a id="result"></a></p>
-<p><a id="copy"></a></p>
-</body>
+    <div class="container" style="margin-top:50px">
+            <div class="card text-left">
+                <h3 class="card-header">Segwit address demo</h3>
+                <div class="card-block">
+                    <div class="form-group row">
+                        <label for="lgFormGroupInput" class="col-sm-2 col-form-label col-form-label-lg">Adress</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control form-control-lg" id="address" placeholder="SegWit address" size="74" oninput="update_status();" />
+                        </div>
+                    </div>
+                    <p><a id="result"></a></p>
+                    <p><a id="copy"></a></p>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>
+
+ <script src="demo.js" type="text/javascript"></script>
+
