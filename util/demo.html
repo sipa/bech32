@@ -11,22 +11,22 @@
 function update_status() {
     var address = document.getElementById("address").value;
     var res = bech32_ecc.check(address);
+    var cp = "";
     if (res === null) {
-        document.getElementById("result").innerHTML = "Ok";
+        document.getElementById("result").innerHTML = "<a style=\"color:green\">Ok</a>";
     } else {
-        document.getElementById("result").innerHTML = res.error + " (" + res.pos + ")";
+        document.getElementById("result").innerHTML = res.error;
         if (res.pos !== null) {
-            var cp = "";
             for (var p = 0; p < address.length; ++p) {
                 if (res.pos.indexOf(p) != -1) {
                     cp += "<a style=\"color:red\">" + address.charAt(p) + "</a>";
                 } else {
-                    cp += "<a style=\"color:green\">" + address.charAt(p) + "</a>";
+                    cp += address.charAt(p);
                 }
             }
-            document.getElementById("copy").innerHTML = cp;
         }
     }
+    document.getElementById("copy").innerHTML = cp;
 }
 </script>
 <h3>Segwit address demo</h3>
