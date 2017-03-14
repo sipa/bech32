@@ -272,9 +272,11 @@ function check (bechString) {
   }
   bechString = bechString.toLowerCase();
   var pos = bechString.lastIndexOf('1');
-
+  if (pos == -1) {
+    return {error:"Missing separator '1'", pos:null};
+  }
   if (pos < 1 || pos + 7 > bechString.length) {
-    return {error:"Separator at invalid position", pos:[pos]};
+    return {error:"Separator '1' at invalid position", pos:[pos]};
   }
   var hrp = bechString.substring(0, pos);
   var data = [];
