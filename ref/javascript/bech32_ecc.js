@@ -298,5 +298,5 @@ function check (bechString) {
     }
     return {error:"Likely incorrect characters", pos:epos};
   }
-  return null;
+  return {error:null, hrp:hrp, data: data.slice(0,-6)};
 }
