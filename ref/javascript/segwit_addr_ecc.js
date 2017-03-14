@@ -52,5 +52,5 @@ function check (addr, validHrp) {
   if (dec.data[0] === 0 && res.length !== 20 && res.length !== 32) {
     return {error:"Invalid witness program length for v0", pos:null};
   }
-  return {error:null};
+  return {error:null, version:dec.data[0], program:res};
 }

@@ -15,12 +15,18 @@
     <body>
         <script type="text/javascript">
 
+function toHexString(byteArray) {
+  return byteArray.map(function(byte) {
+    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+  }).join('')
+}
+
 function update_status() {
     var address = document.getElementById("address").value;
     var res = segwit_addr_ecc.check(address, ["bc", "tb"]);
     var cp = "";
     if (res.error === null) {
-        document.getElementById("result").innerHTML = "<a style=\"color:green\">Ok</a>";
+        document.getElementById("result").innerHTML = "<a style=\"color:green\">Ok, witness version " + res.version + ", program " + toHexString(res.program) + "</a>";
         cp = "<br/>";
     } else {
         document.getElementById("result").innerHTML = res.error;
