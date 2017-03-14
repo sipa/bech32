@@ -69,7 +69,7 @@ function decode (bechString) {
         has_lower = true;
     }
     if (bechString.charAt(p) >= 'A' && bechString.charAt(p) <= 'Z') {
-        has_lower = true;
+        has_upper = true;
     }
   }
   if (has_lower && has_upper) return null;

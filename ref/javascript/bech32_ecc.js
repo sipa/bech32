@@ -266,8 +266,8 @@ function check (bechString) {
         if (has_upper) return {error:"Mixed case", pos:[p]};
     }
     if (bechString.charAt(p) >= 'A' && bechString.charAt(p) <= 'Z') {
-        has_lower = true;
-        if (has_upper) return {error:"Mixed case", pos:[p]};
+        has_upper = true;
+        if (has_lower) return {error:"Mixed case", pos:[p]};
     }
   }
   bechString = bechString.toLowerCase();
