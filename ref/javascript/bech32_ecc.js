@@ -154,35 +154,35 @@ module.exports = {
 function syndrome (residue) {
   var low = residue & 0x1f;
   return low ^ (low << 10) ^ (low << 20) ^
-    ((fault >> 5) & 1 ? 0x31edd3c4 : 0) ^
-    ((fault >> 6) & 1 ? 0x335f86a8 : 0) ^
-    ((fault >> 7) & 1 ? 0x363b8870 : 0) ^
-    ((fault >> 8) & 1 ? 0x3e6390c9 : 0) ^
-    ((fault >> 9) & 1 ? 0x2ec72192 : 0) ^
-    ((fault >> 10) & 1 ? 0x1046f79d : 0) ^
-    ((fault >> 11) & 1 ? 0x208d4e33 : 0) ^
-    ((fault >> 12) & 1 ? 0x130ebd6f : 0) ^
-    ((fault >> 13) & 1 ? 0x2499fade : 0) ^
-    ((fault >> 14) & 1 ? 0x1b27d4b5 : 0) ^
-    ((fault >> 15) & 1 ? 0x04be1eb4 : 0) ^
-    ((fault >> 16) & 1 ? 0x0968b861 : 0) ^
-    ((fault >> 17) & 1 ? 0x1055f0c2 : 0) ^
-    ((fault >> 18) & 1 ? 0x20ab4584 : 0) ^
-    ((fault >> 19) & 1 ? 0x1342af08 : 0) ^
-    ((fault >> 20) & 1 ? 0x24f1f318 : 0) ^
-    ((fault >> 21) & 1 ? 0x1be34739 : 0) ^
-    ((fault >> 22) & 1 ? 0x35562f7b : 0) ^
-    ((fault >> 23) & 1 ? 0x3a3c5bff : 0) ^
-    ((fault >> 24) & 1 ? 0x266c96f7 : 0) ^
-    ((fault >> 25) & 1 ? 0x25c78b65 : 0) ^
-    ((fault >> 26) & 1 ? 0x1b1f13ea : 0) ^
-    ((fault >> 27) & 1 ? 0x34baa2f4 : 0) ^
-    ((fault >> 28) & 1 ? 0x3b61c0e1 : 0) ^
-    ((fault >> 29) & 1 ? 0x265325c2 : 0);
+    ((residue >> 5) & 1 ? 0x31edd3c4 : 0) ^
+    ((residue >> 6) & 1 ? 0x335f86a8 : 0) ^
+    ((residue >> 7) & 1 ? 0x363b8870 : 0) ^
+    ((residue >> 8) & 1 ? 0x3e6390c9 : 0) ^
+    ((residue >> 9) & 1 ? 0x2ec72192 : 0) ^
+    ((residue >> 10) & 1 ? 0x1046f79d : 0) ^
+    ((residue >> 11) & 1 ? 0x208d4e33 : 0) ^
+    ((residue >> 12) & 1 ? 0x130ebd6f : 0) ^
+    ((residue >> 13) & 1 ? 0x2499fade : 0) ^
+    ((residue >> 14) & 1 ? 0x1b27d4b5 : 0) ^
+    ((residue >> 15) & 1 ? 0x04be1eb4 : 0) ^
+    ((residue >> 16) & 1 ? 0x0968b861 : 0) ^
+    ((residue >> 17) & 1 ? 0x1055f0c2 : 0) ^
+    ((residue >> 18) & 1 ? 0x20ab4584 : 0) ^
+    ((residue >> 19) & 1 ? 0x1342af08 : 0) ^
+    ((residue >> 20) & 1 ? 0x24f1f318 : 0) ^
+    ((residue >> 21) & 1 ? 0x1be34739 : 0) ^
+    ((residue >> 22) & 1 ? 0x35562f7b : 0) ^
+    ((residue >> 23) & 1 ? 0x3a3c5bff : 0) ^
+    ((residue >> 24) & 1 ? 0x266c96f7 : 0) ^
+    ((residue >> 25) & 1 ? 0x25c78b65 : 0) ^
+    ((residue >> 26) & 1 ? 0x1b1f13ea : 0) ^
+    ((residue >> 27) & 1 ? 0x34baa2f4 : 0) ^
+    ((residue >> 28) & 1 ? 0x3b61c0e1 : 0) ^
+    ((residue >> 29) & 1 ? 0x265325c2 : 0);
 }
 
 function locate_errors (residue, length) {
-  if (fault == 0) {
+  if (residue == 0) {
     return [];
   }
   var syn = syndrome(residue);
