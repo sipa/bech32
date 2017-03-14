@@ -21,7 +21,7 @@ function update_status() {
                 if (res.pos.indexOf(p) != -1) {
                     cp += "<a style=\"font:red\">" + address.charAt(p) + "</a>";
                 } else {
-                    cp += address.charAt(p);
+                    cp += "<a style=\"font:green\">" + address.charAt(p) + "</a>";
                 }
             }
             document.getElementById("copy").innerHTML = cp;
