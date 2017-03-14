@@ -255,6 +255,7 @@ function range (from, to) {
   for (var i = from; i < to; ++i) {
     ret.push(i);
   }
+  return ret;
 }
 
 function check (bechString, validHrp) {
@@ -308,5 +309,5 @@ function check (bechString, validHrp) {
     }
     return {error:"Likely incorrect characters", pos:epos};
   }
-  return {error:null, data: data.slice(0,-6)};
+  return {error:null};
 }
