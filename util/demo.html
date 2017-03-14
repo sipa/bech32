@@ -18,7 +18,7 @@ function update_status() {
         if (res.pos !== null) {
             var cp = "";
             for (var p = 0; p < address.length; ++p) {
-                if (res.pos.indexOf(address.charAt(p)) != -1) {
+                if (res.pos.indexOf(p) != -1) {
                     cp += "<a style=\"font:red\">" + address.charAt(p) + "</a>";
                 } else {
                     cp += address.charAt(p);

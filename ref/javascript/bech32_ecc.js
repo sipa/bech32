@@ -294,7 +294,7 @@ function check (bechString) {
       return {error:"Checksum mismatch", pos:null};
     }
     for (var ep = 0; ep < epos.length; ++ep) {
-      epos[ep] = bechString.length - epos[ep] - (epos[ep] >= data.length ? 1 : 0);
+      epos[ep] = bechString.length - epos[ep] - (epos[ep] >= data.length ? 2 : 1);
     }
     return {error:"Likely incorrect characters", pos:epos};
   }
