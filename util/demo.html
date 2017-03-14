@@ -19,9 +19,9 @@ function update_status() {
             var cp = "";
             for (var p = 0; p < address.length; ++p) {
                 if (res.pos.indexOf(p) != -1) {
-                    cp += "<a style=\"font:red\">" + address.charAt(p) + "</a>";
+                    cp += "<a style=\"color:red\">" + address.charAt(p) + "</a>";
                 } else {
-                    cp += "<a style=\"font:green\">" + address.charAt(p) + "</a>";
+                    cp += "<a style=\"color:green\">" + address.charAt(p) + "</a>";
                 }
             }
             document.getElementById("copy").innerHTML = cp;
