@@ -36,7 +36,7 @@ function check (addr, validHrp) {
     return {error:"Too short", pos:null};
   }
   if (addr.length > 74) {
-    return {error:"Too short", pos:null};
+    return {error:"Too long", pos:null};
   }
   var dec = bech32_ecc.check(addr, validHrp);
   if (dec.error !== null) {
