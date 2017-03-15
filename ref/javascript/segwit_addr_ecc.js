@@ -32,10 +32,10 @@ function convertbits (data, frombits, tobits, pad) {
 }
 
 function check (addr, validHrp) {
-  if (dec.data.length < 14) {
+  if (addr.length < 14) {
     return {error:"Too short", pos:null};
   }
-  if (dec.data.length > 74) {
+  if (addr.length > 74) {
     return {error:"Too short", pos:null};
   }
   var dec = bech32_ecc.check(addr, validHrp);
