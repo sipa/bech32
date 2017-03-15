@@ -36,7 +36,10 @@ function check (addr, validHrp) {
   if (dec.error !== null) {
     return {error:dec.error, pos:dec.pos};
   }
-  if (dec.data.length < 1) {
+  if (dec.data.length < 14) {
+    return {error:"Too short", pos:null};
+  }
+  if (dec.data.length > 74) {
     return {error:"Too short", pos:null};
   }
   var res = convertbits(dec.data.slice(1), 5, 8, false);
