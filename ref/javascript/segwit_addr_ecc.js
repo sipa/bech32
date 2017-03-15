@@ -32,15 +32,15 @@ function convertbits (data, frombits, tobits, pad) {
 }
 
 function check (addr, validHrp) {
-  var dec = bech32_ecc.check(addr, validHrp);
-  if (dec.error !== null) {
-    return {error:dec.error, pos:dec.pos};
-  }
   if (dec.data.length < 14) {
     return {error:"Too short", pos:null};
   }
   if (dec.data.length > 74) {
     return {error:"Too short", pos:null};
+  }
+  var dec = bech32_ecc.check(addr, validHrp);
+  if (dec.error !== null) {
+    return {error:dec.error, pos:dec.pos};
   }
   var res = convertbits(dec.data.slice(1), 5, 8, false);
   if (res === null) {
