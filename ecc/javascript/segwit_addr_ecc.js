@@ -43,7 +43,7 @@ function check (addr, validHrp) {
   }
   var dec = bech32_ecc.check(addr, validHrp);
   if (dec.error !== null) {
-    return {error:dec.pos, pos:dec.pos};
+    return {error:dec.error, pos:dec.pos};
   }
   var res = convertbits(dec.data.slice(1), 5, 8, false);
   if (res === null) {
