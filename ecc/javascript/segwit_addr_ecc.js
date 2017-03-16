@@ -38,9 +38,12 @@ function check (addr, validHrp) {
   if (addr.length > 74) {
     return {error:"Too long", pos:null};
   }
+  if ([0, 3, 5].indexOf(addr.length % 8) != -1) {
+    return {error:"Invalid length", pos:null};
+  }
   var dec = bech32_ecc.check(addr, validHrp);
   if (dec.error !== null) {
-    return {error:dec.error, pos:dec.pos};
+    return {error:dec.pos, pos:dec.pos};
   }
   var res = convertbits(dec.data.slice(1), 5, 8, false);
   if (res === null) {
