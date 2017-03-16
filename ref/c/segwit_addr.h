@@ -47,18 +47,10 @@ int bech32_encode(
  *  Returns 1 if succesful.
  */
 int bech32_decode(
-    size_t *hrp_len,
+    char *hrp,
     uint8_t *data,
     size_t *data_len,
     const char *input
-);
-
-int32_t segwit_addr_decode_fault(
-    int* witver,
-    uint8_t* witdata,
-    size_t* witdata_len,
-    const char* hrp,
-    const char* addr
 );
 
 #endif

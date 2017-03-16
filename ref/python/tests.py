@@ -11,7 +11,7 @@ def segwit_scriptpubkey(witver, witprog):
     return bytes([witver + 0x80 if witver else 0, len(witprog)] + witprog)
 
 VALID_CHECKSUM = [
-    "a12uel5l",
+    "A12UEL5L",
     "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
     "abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
     "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j",

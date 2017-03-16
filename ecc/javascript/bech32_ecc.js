@@ -302,12 +302,12 @@ function check (bechString, validHrp) {
   if (residue != 0) {
     var epos = locate_errors(residue, bechString.length - 1);
     if (epos.length == 0) {
-      return {error:"Checksum mismatch", pos:null};
+      return {error:"Invalid", pos:null};
     }
     for (var ep = 0; ep < epos.length; ++ep) {
       epos[ep] = bechString.length - epos[ep] - (epos[ep] >= data.length ? 2 : 1);
     }
-    return {error:"Likely incorrect characters", pos:epos};
+    return {error:"Invalid", pos:epos};
   }
   return {error:null, hrp:hrp, data:data.slice(0, -6)};
 }

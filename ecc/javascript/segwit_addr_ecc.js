@@ -32,12 +32,18 @@ function convertbits (data, frombits, tobits, pad) {
 }
 
 function check (addr, validHrp) {
+  if (addr.length < 14) {
+    return {error:"Too short", pos:null};
+  }
+  if (addr.length > 74) {
+    return {error:"Too long", pos:null};
+  }
+  if ((addr.length % 8) == 0 || (addr.length % 8) == 3 || (addr.length % 8) == 5) {
+    return {error:"Invalid length", pos:null};
+  }
   var dec = bech32_ecc.check(addr, validHrp);
   if (dec.error !== null) {
     return {error:dec.error, pos:dec.pos};
-  }
-  if (dec.data.length < 1) {
-    return {error:"Too short", pos:null};
   }
   var res = convertbits(dec.data.slice(1), 5, 8, false);
   if (res === null) {
@@ -52,5 +58,5 @@ function check (addr, validHrp) {
   if (dec.data[0] === 0 && res.length !== 20 && res.length !== 32) {
     return {error:"Invalid witness program length for v0", pos:null};
   }
-  return {error:null};
+  return {error:null, version:dec.data[0], program:res};
 }

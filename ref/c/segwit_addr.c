@@ -21,8 +21,8 @@ static const int8_t charset_rev[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     15, -1, 10, 17, 21, 20, 26, 30,  7,  5, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
+     1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1,
     -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
      1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
 };
@@ -58,52 +58,64 @@ int bech32_encode(char *output, const char *hrp, const uint8_t *data, size_t dat
     return 1;
 }
 
-int32_t bech32_decode_fault(size_t *hrp_len, uint8_t *data, size_t *data_len, const char *input) {
+int bech32_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input) {
     uint32_t chk = 1;
     size_t i;
     size_t input_len = strlen(input);
-    if (input_len < 8 || input[input_len] != 0) {
-        return -1;
+    size_t hrp_len;
+    int have_lower = 0, have_upper = 0;
+    if (input_len < 8 || input_len > 90) {
+        return 0;
     }
     *data_len = 0;
     while (*data_len < input_len && input[(input_len - 1) - *data_len] != '1') {
         ++(*data_len);
     }
-    *hrp_len = input_len - (1 + *data_len);
-    if (*hrp_len < 1 || *data_len < 6) {
-        return -2;
+    hrp_len = input_len - (1 + *data_len);
+    if (hrp_len < 1 || *data_len < 6) {
+        return 0;
     }
     *(data_len) -= 6;
-    for (i = 0; i < *hrp_len; ++i) {
-        if (input[i] < 33 || input[i] > 126) {
-            return -3;
+    for (i = 0; i < hrp_len; ++i) {
+        int ch = input[i];
+        if (ch < 33 || ch > 126) {
+            return 0;
         }
-        chk = bech32_polymod_step(chk) ^ (input[i] >> 5);
+        if (ch >= 'a' && ch <= 'z') {
+            have_lower = 1;
+        } else if (ch >= 'A' && ch <= 'Z') {
+            have_upper = 1;
+            ch = (ch - 'A') + 'a';
+        }
+        hrp[i] = ch;
+        chk = bech32_polymod_step(chk) ^ (ch >> 5);
     }
+    hrp[i] = 0;
     chk = bech32_polymod_step(chk);
-    for (i = 0; i < *hrp_len; ++i) {
+    for (i = 0; i < hrp_len; ++i) {
         chk = bech32_polymod_step(chk) ^ (input[i] & 0x1f);
     }
     ++i;
     while (i < input_len) {
         int v = (input[i] & 0x80) ? -2 : charset_rev[(int)input[i]];
+        if (input[i] >= 'a' && input[i] <= 'z') have_lower = 1;
+        if (input[i] >= 'A' && input[i] <= 'Z') have_upper = 1;
         if (v == -1) {
-            return -4;
+            return 0;
         }
         if (v == -2) {
-            return -5;
+            return 0;
         }
         chk = bech32_polymod_step(chk) ^ v;
         if (i + 6 < input_len) {
-            data[i - (1 + *hrp_len)] = v;
+            data[i - (1 + hrp_len)] = v;
         }
         ++i;
     }
-    return chk ^ 1;
-}
-
-int bech32_decode(size_t *hrp_len, uint8_t *data, size_t *data_len, const char *input) {
-    return bech32_decode_fault(hrp_len, data, data_len, input) == 0;
+    if (have_lower && have_upper) {
+        return 0;
+    }
+    return chk == 1;
 }
 
 static int convert_bits(uint8_t* out, size_t* outlen, int outbits, const uint8_t* in, size_t inlen, int inbits, int pad) {
@@ -140,43 +152,18 @@ int segwit_addr_encode(char *output, const char *hrp, uint8_t witver, const uint
     return bech32_encode(output, hrp, data, datalen);
 }
 
-int32_t segwit_addr_decode_fault(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr) {
-    uint8_t data[84];
-    char addr_lower[93];
-    size_t data_len;
-    size_t hrp_len;
-    size_t pos = 0;
-    int have_lower = 0;
-    int have_upper = 0;
-    int32_t faultv;
-    while (pos < 93) {
-        char ch = addr[pos];
-        if (ch >= 'A' && ch <= 'Z') {
-            have_upper = 1;
-            ch = (ch - 'A') + 'a';
-        } else if (ch >= 'a' && ch <= 'z') {
-            have_lower = 1;
-        }
-        addr_lower[pos] = ch;
-        if (ch == 0) break;
-        ++pos;
-    }
-    if (pos == 93) return -1;
-    if (have_lower && have_upper) return -1;
-    faultv = bech32_decode_fault(&hrp_len, data, &data_len, addr_lower);
-    if (faultv < 0) return -1;
-    if (data_len == 0 || data_len > 65) return -1;
-    if (strlen(hrp) != hrp_len) return -1;
-    if (memcmp(hrp, addr_lower, hrp_len) != 0) return -1;
-    if (data[0] > 16) return -1;
-    *witdata_len = 0;
-    if (!convert_bits(witdata, witdata_len, 8, data + 1, data_len - 1, 5, 0)) return -1;
-    if (*witdata_len < 2 || *witdata_len > 40) return -1;
-    if (data[0] == 0 && *witdata_len != 20 && *witdata_len != 32) return -1;
-    *witver = data[0];
-    return faultv;
-}
-
 int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr) {
-    return segwit_addr_decode_fault(witver, witdata, witdata_len, hrp, addr) == 0;
+    uint8_t data[84];
+    char hrp_actual[84];
+    size_t data_len;
+    if (!bech32_decode(hrp_actual, data, &data_len, addr)) return 0;
+    if (data_len == 0 || data_len > 65) return 0;
+    if (strncmp(hrp, hrp_actual, 84) != 0) return 0;
+    if (data[0] > 16) return 0;
+    *witdata_len = 0;
+    if (!convert_bits(witdata, witdata_len, 8, data + 1, data_len - 1, 5, 0)) return 0;
+    if (*witdata_len < 2 || *witdata_len > 40) return 0;
+    if (data[0] == 0 && *witdata_len != 20 && *witdata_len != 32) return 0;
+    *witver = data[0];
+    return 1;
 }
