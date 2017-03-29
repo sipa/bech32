@@ -1,0 +1,6 @@
+[package]
+name = "bech32"
+version = "0.1.0"
+authors = ["Clark Moody"]
+
+[dependencies]
