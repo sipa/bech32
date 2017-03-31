@@ -1,4 +1,37 @@
+// Copyright (c) 2017 Clark Moody
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 #![warn(missing_docs)]
+
+//! Encoding and decoding for Bech32 strings and Bitcoin Segregated Witness 
+//! addresses. Bech32 is a 5-bit (base-32) encoding scheme that produces
+//! strings that comprise a human-readable part, a separator, a data part,
+//! and a checksum. The encoding implements a BCH code that guarantees
+//! error detection of up to four characters with less than 1 in 1 billion
+//! chance of failing to detect more errors.
+//! 
+//! The library contains `bech32` utilities for generic encoding of Bech32
+//! strings and `segwit_addr` for converting witness programs to Bitcoin
+//! addresses and back.
+//! 
+//! 
 
 pub mod bech32;
 pub mod segwit_addr;
