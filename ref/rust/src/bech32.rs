@@ -18,27 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// Bech32 { hrp: "bech32", data: [0, 1, 2] }->"bech321qpz4nc4pe"
+
 //! Encode and decode the Bech32 format, with checksums
 //! 
+//! # Examples
+//! ```rust
+//! use bech32::bech32::Bech32;
 //! 
-//! 
+//! let b = Bech32 {
+//!     hrp: "bech32".to_string(), 
+//!     data: vec![0x00, 0x01, 0x02] 
+//! };
+//! let encode = b.to_string().unwrap();
+//! assert_eq!(encode, "bech321qpz4nc4pe".to_string());
+//! ```
 
-use std::fmt;
-use std::error::Error;
+use super::CodingError;
 
-#[derive(Debug)]
+/// Grouping structure for the human-readable part and the data part
+/// of decoded Bech32 string.
+#[derive(PartialEq, Debug)]
 pub struct Bech32 {
+    /// Human-readable part
     pub hrp: String,
+    /// Data payload
     pub data: Vec<u8>
-}
-
-impl Bech32 {
-    pub fn clone(&self) -> Bech32 {
-        Bech32 {
-            hrp: self.hrp.clone(),
-            data: self.data.to_vec()
-        }
-    }
 }
 
 // Human-readable part and data part separator
@@ -64,108 +69,123 @@ const CHARSET_REV: [i8; 128] = [
      1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
 ];
 
-// Generator coefficients
-const GEN: [u32; 5] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+type EncodeResult = Result<String, CodingError>;
+type DecodeResult = Result<Bech32, CodingError>;
 
-pub fn encode(b: Bech32) -> EncodeResult {
-    let hrp_bytes: Vec<u8> = b.hrp.clone().into_bytes();
-    let mut combined: Vec<u8> = b.data.clone();
-    combined.extend_from_slice(&create_checksum(&hrp_bytes, &b.data));
-    let mut ret: String = format!("{}{}", b.hrp, SEP);
-    for p in combined {
-        ret.push(CHARSET[p as usize]);
-    }
-    Ok(ret)
-}
-
-pub fn decode(s: String) -> DecodeResult {
-    // Ensure overall length is within bounds
-    let len: usize = s.len();
-    if len < 8 || len > 90 {
-        return Err(CodingError::InvalidLength)
-    }
-
-    // Split at separator and check for two pieces
-    let parts: Vec<&str> = s.rsplitn(2, SEP).collect();
-    if parts.len() != 2 {
-        return Err(CodingError::InvalidChar)
-    }
-    let raw_hrp = parts[1];
-    let raw_data = parts[0];
-    if raw_hrp.len() < 1 || raw_data.len() < 6 {
-        return Err(CodingError::InvalidLength)
-    }
-
-    let mut has_lower: bool = false;
-    let mut has_upper: bool = false;
-    let mut hrp_bytes: Vec<u8> = Vec::new();
-    for b in raw_hrp.bytes() {
-        // Valid subset of ASCII
-        if b < 33 || b > 126 {
-            return Err(CodingError::InvalidChar)
+impl Bech32 {
+    /// Encode as a string
+    pub fn to_string(&self) -> EncodeResult {
+        if self.hrp.len() < 1 {
+            return Err(CodingError::InvalidLength)
         }
-        let mut c = b;
-        // Lowercase
-        if b >= 97 && b <= 122 {
-            has_lower = true;
+        let hrp_bytes: Vec<u8> = self.hrp.clone().into_bytes();
+        let mut combined: Vec<u8> = self.data.clone();
+        combined.extend_from_slice(&create_checksum(&hrp_bytes, &self.data));
+        let mut encoded: String = format!("{}{}", self.hrp, SEP);
+        for p in combined {
+            if p >= 32 {
+                return Err(CodingError::InvalidData)
+            }
+            encoded.push(CHARSET[p as usize]);
         }
-        // Uppercase
-        if b >= 65 && b <= 90 {
-            has_upper = true;
-            // Convert to lowercase
-            c = b + (97-65);
-        }
-        hrp_bytes.push(c);
+        Ok(encoded)
     }
 
-    // Ensure no mixed case
-    if has_lower && has_upper {
-        return Err(CodingError::MixedCase)
-    }
-
-    // Check data payload
-    let mut data_bytes: Vec<u8> = Vec::new();
-    for b in raw_data.bytes() {
-        // Aphanumeric only
-        if !((b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122)) {
-            return Err(CodingError::InvalidChar)
+    /// Decode from a string
+    pub fn from_string(s: String) -> DecodeResult {
+        // Ensure overall length is within bounds
+        let len: usize = s.len();
+        if len < 8 || len > 90 {
+            return Err(CodingError::InvalidLength)
         }
-        // Excludes these characters: [1,b,i,o]
-        if b == 49 || b == 98 || b == 105 || b == 111 {
-            return Err(CodingError::InvalidChar)
+
+        // Check for missing separator
+        if s.find(SEP).is_none() {
+            return Err(CodingError::MissingSeparator)
         }
-        // Lowercase
-        if b >= 97 && b <= 122 {
-            has_lower = true;
+
+        // Split at separator and check for two pieces
+        let parts: Vec<&str> = s.rsplitn(2, SEP).collect();
+        let raw_hrp = parts[1];
+        let raw_data = parts[0];
+        if raw_hrp.len() < 1 || raw_data.len() < 6 {
+            return Err(CodingError::InvalidLength)
         }
-        let mut c = b;
-        // Uppercase
-        if b >= 65 && b <= 90 {
-            has_upper = true;
-            // Convert to lowercase
-            c = b + (97-65);
+
+        let mut has_lower: bool = false;
+        let mut has_upper: bool = false;
+        let mut hrp_bytes: Vec<u8> = Vec::new();
+        for b in raw_hrp.bytes() {
+            // Valid subset of ASCII
+            if b < 33 || b > 126 {
+                return Err(CodingError::InvalidChar)
+            }
+            let mut c = b;
+            // Lowercase
+            if b >= 97 && b <= 122 {
+                has_lower = true;
+            }
+            // Uppercase
+            if b >= 65 && b <= 90 {
+                has_upper = true;
+                // Convert to lowercase
+                c = b + (97-65);
+            }
+            hrp_bytes.push(c);
         }
-        data_bytes.push(CHARSET_REV[c as usize] as u8);
+
+        // Check data payload
+        let mut data_bytes: Vec<u8> = Vec::new();
+        for b in raw_data.bytes() {
+            // Aphanumeric only
+            if !((b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122)) {
+                return Err(CodingError::InvalidChar)
+            }
+            // Excludes these characters: [1,b,i,o]
+            if b == 49 || b == 98 || b == 105 || b == 111 {
+                return Err(CodingError::InvalidChar)
+            }
+            // Lowercase
+            if b >= 97 && b <= 122 {
+                has_lower = true;
+            }
+            let mut c = b;
+            // Uppercase
+            if b >= 65 && b <= 90 {
+                has_upper = true;
+                // Convert to lowercase
+                c = b + (97-65);
+            }
+            data_bytes.push(CHARSET_REV[c as usize] as u8);
+        }
+
+        // Ensure no mixed case
+        if has_lower && has_upper {
+            return Err(CodingError::MixedCase)
+        }
+
+        // Ensure checksum
+        if !verify_checksum(&hrp_bytes, &data_bytes) {
+            return Err(CodingError::InvalidChecksum)
+        }
+
+        // Remove checksum from data payload
+        let dbl: usize = data_bytes.len();
+        data_bytes.truncate(dbl - 6);
+
+        Ok(Bech32 {
+            hrp: String::from_utf8(hrp_bytes).unwrap(),
+            data: data_bytes
+        })
     }
-
-    // Ensure no mixed case
-    if has_lower && has_upper {
-        return Err(CodingError::MixedCase)
+    
+    /// Returns a copy of the object
+    pub fn clone(&self) -> Bech32 {
+        Bech32 {
+            hrp: self.hrp.clone(),
+            data: self.data.to_vec()
+        }
     }
-
-    // Ensure checksum
-    if !verify_checksum(&hrp_bytes, &data_bytes) {
-        return Err(CodingError::InvalidChecksum)
-    }
-
-    // Remove checksum from data payload
-    let dbl: usize = data_bytes.len();
-    data_bytes.truncate(dbl - 6);
-
-    Ok(Bech32 {
-        hrp: String::from_utf8(hrp_bytes).unwrap(),
-        data: data_bytes
-    })
 }
 
 fn create_checksum(hrp: &Vec<u8>, data: &Vec<u8>) -> Vec<u8> {
@@ -199,6 +219,9 @@ fn hrp_expand(hrp: &Vec<u8>) -> Vec<u8> {
     v
 }
 
+// Generator coefficients
+const GEN: [u32; 5] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+
 fn polymod(values: Vec<u8>) -> u32 {
     let mut chk: u32 = 1;
     let mut b: u8;
@@ -213,45 +236,3 @@ fn polymod(values: Vec<u8>) -> u32 {
     }
     chk
 }
-
-#[derive(Debug)]
-pub enum CodingError {
-    InvalidChecksum,
-    InvalidLength,
-    InvalidChar,
-    MixedCase,
-}
-
-impl fmt::Display for CodingError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            CodingError::InvalidChecksum => write!(f, "Invalid checksum."),
-            CodingError::InvalidLength => write!(f, "Invalid length."),
-            CodingError::InvalidChar => write!(f, "Invalid character."),
-            CodingError::MixedCase => write!(f, "Mixed-case strings not allowed."),
-        }
-    }
-}
-
-impl Error for CodingError {
-    fn description(&self) -> &str {
-        match *self {
-            CodingError::InvalidChecksum => "Invalid checksum.",
-            CodingError::InvalidLength => "Invalid length.",
-            CodingError::InvalidChar => "Invalid character.",
-            CodingError::MixedCase => "Mixed-case strings not allowed.",
-        }
-    }
-
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            CodingError::InvalidChecksum => None,
-            CodingError::InvalidLength => None,
-            CodingError::InvalidChar => None,
-            CodingError::MixedCase => None,
-        }
-    }
-}
-
-pub type DecodeResult = Result<Bech32, CodingError>;
-pub type EncodeResult = Result<String, CodingError>;
