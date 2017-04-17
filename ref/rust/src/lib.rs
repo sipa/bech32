@@ -202,11 +202,11 @@ mod tests {
         for p in pairs {
             let (address, scriptpubkey) = p;
             let mut hrp = "bc".to_string();
-            let mut dec_result = wit_prog::WitnessProgram::from_address(hrp.clone(), 
+            let mut dec_result = wit_prog::WitnessProgram::from_address(hrp.clone(),
                 address.to_string());
             if !dec_result.is_ok() {
                 hrp = "tb".to_string();
-                dec_result = wit_prog::WitnessProgram::from_address(hrp.clone(), 
+                dec_result = wit_prog::WitnessProgram::from_address(hrp.clone(),
                     address.to_string());
                 if !dec_result.is_ok() {
                     println!("Should be valid: {:?}", address);
@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn invalid_address() {
         let pairs: Vec<(&str, AddressError)> = vec!(
-            ("tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty", 
+            ("tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
                 AddressError::InvalidHumanReadablePart),
             ("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5",
                 AddressError::Bech32(CodingError::InvalidChecksum)),
