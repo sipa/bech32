@@ -218,6 +218,10 @@ mod tests {
             let pubkey = prog.clone().to_scriptpubkey();
             assert_eq!(pubkey, scriptpubkey);
 
+            let spk_result = wit_prog::WitnessProgram::from_scriptpubkey(&scriptpubkey);
+            assert!(spk_result.is_ok());
+            assert_eq!(prog, spk_result.unwrap());
+
             let enc_result = prog.to_address(hrp);
             assert!(enc_result.is_ok());
 

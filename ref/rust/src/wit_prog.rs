@@ -48,7 +48,7 @@ use super::BitConversionError;
 use super::WitnessProgramError;
 
 /// Witness version and program data
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct WitnessProgram {
     /// Witness program version
     pub version: u8,
@@ -75,16 +75,15 @@ impl WitnessProgram {
             Ok(p) => p,
             Err(e) => return Err(AddressError::Conversion(e))
         };
+        // let p5 = convert_bits(self.program.to_vec(), 8, 5, true)?;
         data.extend_from_slice(&p5);
         let b32 = Bech32 {hrp: hrp.clone(), data: data};
         let address = match b32.to_string() {
             Ok(s) => s,
             Err(e) => return Err(AddressError::Bech32(e))
         };
-        let dec_result = WitnessProgram::from_address(hrp, address.clone());
-        if dec_result.is_err() {
-            return Err(dec_result.unwrap_err())
-        }
+        // Ensure that the address decodes into a program properly
+        WitnessProgram::from_address(hrp, address.clone())?;
         Ok(address)
     }
 
@@ -140,7 +139,7 @@ impl WitnessProgram {
     }
 
     /// Extracts a WitnessProgram out of a provided script public key
-    pub fn from_scriptpubkey(pubkey: Vec<u8>) -> PubKeyResult {
+    pub fn from_scriptpubkey(pubkey: &[u8]) -> PubKeyResult {
         // We need a version byte and a program length byte, with a program at 
         // least 2 bytes long.
         if pubkey.len() < 4 {
@@ -156,7 +155,7 @@ impl WitnessProgram {
         if v > 0x80 {
             v -= 0x80;
         }
-        let (_, program) = pubkey.split_at(2);
+        let program = &pubkey[2..];
         Ok(WitnessProgram {
             version: v,
             program: program.to_vec()
@@ -178,14 +177,6 @@ impl WitnessProgram {
             return Err(WitnessProgramError::InvalidVersionLength)
         }
         Ok(())
-    }
-
-    /// Returns a copy of the object
-    pub fn clone(&self) -> WitnessProgram {
-        WitnessProgram {
-            version: self.version,
-            program: self.program.to_vec()
-        }
     }
 }
 

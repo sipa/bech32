@@ -38,7 +38,7 @@ use super::CodingError;
 
 /// Grouping structure for the human-readable part and the data part
 /// of decoded Bech32 string.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Bech32 {
     /// Human-readable part
     pub hrp: String,
@@ -122,14 +122,14 @@ impl Bech32 {
             }
             let mut c = b;
             // Lowercase
-            if b >= 97 && b <= 122 {
+            if b >= b'a' && b <= b'z' {
                 has_lower = true;
             }
             // Uppercase
-            if b >= 65 && b <= 90 {
+            if b >= b'A' && b <= b'Z' {
                 has_upper = true;
                 // Convert to lowercase
-                c = b + (97-65);
+                c = b + (b'a'-b'A');
             }
             hrp_bytes.push(c);
         }
@@ -138,23 +138,23 @@ impl Bech32 {
         let mut data_bytes: Vec<u8> = Vec::new();
         for b in raw_data.bytes() {
             // Aphanumeric only
-            if !((b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122)) {
+            if !((b >= b'0' && b <= b'9') || (b >= b'A' && b <= b'Z') || (b >= b'a' && b <= b'z')) {
                 return Err(CodingError::InvalidChar)
             }
             // Excludes these characters: [1,b,i,o]
-            if b == 49 || b == 98 || b == 105 || b == 111 {
+            if b == b'1' || b == b'b' || b == b'i' || b == b'o' {
                 return Err(CodingError::InvalidChar)
             }
             // Lowercase
-            if b >= 97 && b <= 122 {
+            if b >= b'a' && b <= b'z' {
                 has_lower = true;
             }
             let mut c = b;
             // Uppercase
-            if b >= 65 && b <= 90 {
+            if b >= b'A' && b <= b'Z' {
                 has_upper = true;
                 // Convert to lowercase
-                c = b + (97-65);
+                c = b + (b'a'-b'A');
             }
             data_bytes.push(CHARSET_REV[c as usize] as u8);
         }
@@ -178,21 +178,13 @@ impl Bech32 {
             data: data_bytes
         })
     }
-    
-    /// Returns a copy of the object
-    pub fn clone(&self) -> Bech32 {
-        Bech32 {
-            hrp: self.hrp.clone(),
-            data: self.data.to_vec()
-        }
-    }
 }
 
 fn create_checksum(hrp: &Vec<u8>, data: &Vec<u8>) -> Vec<u8> {
     let mut values: Vec<u8> = hrp_expand(hrp);
     values.extend_from_slice(data);
-    let pad: Vec<u8> = vec![0,0,0,0,0,0];
-    values.extend_from_slice(&pad);
+    // Pad with 6 zeros
+    values.extend_from_slice(&[0u8; 6]);
     let plm: u32 = polymod(values) ^ 1;
     let mut checksum: Vec<u8> = Vec::new();
     for p in 0..6 {
