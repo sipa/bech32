@@ -7,7 +7,7 @@
   Comments-URI: ???
   Status: Draft
   Type: Informational
-  Created: 2016-03-20
+  Created: 2017-03-20
   License: BSD-2-Clause
 </pre>
 
@@ -19,7 +19,7 @@ This document proposes a checksummed base32 format, "Bech32", and a standard for
 
 ===Copyright===
 
-This BIP is licensed under the 2-clause BSD license.
+This BIP is licensed under the [https://github.com/bitcoin/bips/blob/master/COPYING 2-clause BSD license].
 
 ===Motivation===
 
