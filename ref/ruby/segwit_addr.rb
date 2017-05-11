@@ -35,6 +35,12 @@ class SegwitAddr
     ([v, prog.length].pack("CC") + prog.map{|p|[p].pack("C")}.join).unpack('H*').first
   end
 
+  def scriptpubkey=(script)
+    values = [script].pack('H*').unpack("C*")
+    @ver = values[0]
+    @prog = values[2..-1]
+  end
+
   def addr
     encoded = Bech32.encode(hrp, [ver] + convert_bits(prog, 8, 5))
     chrp, cver, cprog = parse_addr(encoded)
