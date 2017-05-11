@@ -85,7 +85,6 @@ class TestBech32 < Test::Unit::TestCase
   def test_scriptpubkey=
     segwit_addr = SegwitAddr.new
     segwit_addr.hrp = 'bc'
-    segwit_addr.ver = 0
     segwit_addr.scriptpubkey = '0014751e76e8199196d454941c45d1b3a323f1433bd6'
     assert_equal('bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4', segwit_addr.addr)
   end
