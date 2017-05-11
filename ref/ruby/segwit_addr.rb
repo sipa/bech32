@@ -27,7 +27,7 @@ class SegwitAddr
   attr_accessor :prog # witness program
 
   def initialize(addr = nil)
-    parse_addr(addr) if addr
+    @hrp, @ver, @prog = parse_addr(addr) if addr
   end
 
   def to_scriptpubkey
@@ -36,19 +36,23 @@ class SegwitAddr
   end
 
   def addr
-    Bech32.encode(hrp, [ver] + convert_bits(prog, 8, 5))
+    encoded = Bech32.encode(hrp, [ver] + convert_bits(prog, 8, 5))
+    chrp, cver, cprog = parse_addr(encoded)
+    raise 'Invalid address' if chrp != hrp || cver != ver || cprog != prog
+    encoded
   end
 
   private
 
   def parse_addr(addr)
-    @hrp, data = Bech32.decode(addr)
-    raise 'Invalid address.' if @hrp.nil? || (@hrp != 'bc' && @hrp != 'tb')
-    @ver = data[0]
-    raise 'Invalid witness version' if @ver > 16
-    @prog = convert_bits(data[1..-1], 5, 8, false)
-    raise 'Invalid witness program' if @prog.nil? || @prog.length < 2 || @prog.length > 40
-    raise 'Invalid witness program with version 0' if @ver == 0 && (@prog.length != 20 && @prog.length != 32)
+    hrp, data = Bech32.decode(addr)
+    raise 'Invalid address.' if hrp.nil? || (hrp != 'bc' && hrp != 'tb')
+    ver = data[0]
+    raise 'Invalid witness version' if ver > 16
+    prog = convert_bits(data[1..-1], 5, 8, false)
+    raise 'Invalid witness program' if prog.nil? || prog.length < 2 || prog.length > 40
+    raise 'Invalid witness program with version 0' if ver == 0 && (prog.length != 20 && prog.length != 32)
+    [hrp, ver, prog]
   end
 
   def convert_bits(data, from, to, padding=true)
