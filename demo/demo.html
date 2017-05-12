@@ -9,7 +9,13 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
         <link rel="stylesheet" href="style.css">
         <style>
-            .monospace { font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace; }
+            .monospace {
+                font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+            }
+            a.demo_link {
+                text-decoration-style: dashed;
+                text-underline-position: under;
+            }
         </style>
     </head>
     <body>
@@ -79,9 +85,9 @@ function update_status() {
                     <p><span class="monospace"><a id="copy"><br/></a></span></p>
                     Fill field with:
                     <ul>
-                    <li> <a style="text-decoration:underline;" onclick='document.getElementById("address").value = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";update_status();'>P2WPKH example</a>
-                    <li> <a style="text-decoration:underline;" onclick='document.getElementById("address").value = "BC1QW508D6QEJXTDG4Y5R3ZARVAYR0C5XW7KV8F3T4";update_status();'>P2WPKH example with errors</a>
-                    <li> <a style="text-decoration:underline;" onclick='document.getElementById("address").value = "bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3";update_status();'>P2WSH example</a>
+                    <li> <a class="demo_link" href='javascript:document.getElementById("address").value = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";update_status();'>P2WPKH example</a>
+                    <li> <a class="demo_link" href='javascript:document.getElementById("address").value = "BC1QW508D6QEJXTDG4Y5R3ZARVAYR0C5XW7KV8F3T4";update_status();'>P2WPKH example with errors</a>
+                    <li> <a class="demo_link" href='javascript:document.getElementById("address").value = "bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3";update_status();'>P2WSH example</a>
                     </ul>
                 </div>
             </div>
