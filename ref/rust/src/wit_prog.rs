@@ -130,7 +130,7 @@ impl WitnessProgram {
         let mut pubkey: Vec<u8> = Vec::new();
         let mut v = self.version;
         if v > 0 {
-            v += 0x80;
+            v += 0x50;
         }
         pubkey.push(v);
         pubkey.push(self.program.len() as u8);
@@ -152,8 +152,8 @@ impl WitnessProgram {
         }
         // Process script version
         let mut v: u8 = pubkey[0];
-        if v > 0x80 {
-            v -= 0x80;
+        if v > 0x50 {
+            v -= 0x50;
         }
         let program = &pubkey[2..];
         Ok(WitnessProgram {
