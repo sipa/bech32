@@ -97,7 +97,7 @@ public class SegwitAddress {
 
     public static byte[] getScriptPubkey(byte witver, byte[] witprog) {
 
-        byte v = (witver > 0) ? (byte)(witver + 0x80) : (byte)0;
+        byte v = (witver > 0) ? (byte)(witver + 0x50) : (byte)0;
         byte[] ver = new byte[] { v, (byte)witprog.length };
 
         byte[] ret = new byte[witprog.length + ver.length];
