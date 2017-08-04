@@ -31,7 +31,7 @@ class SegwitAddr
   end
 
   def to_scriptpubkey
-    v = ver == 0 ? ver : ver + 0x80
+    v = ver == 0 ? ver : ver + 0x50
     ([v, prog.length].pack("CC") + prog.map{|p|[p].pack("C")}.join).unpack('H*').first
   end
 
