@@ -33,6 +33,17 @@ var VALID_CHECKSUM = [
     "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w"
 ];
 
+var INVALID_CHECKSUM = [
+    " 1nwldj5",
+    "\x7F" + "1axkwrx",
+    "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
+    "pzry9x0s0muk",
+    "1pzry9x0s0muk",
+    "x1b4n0q5v",
+    "li1dgmt3",
+    "de1lg7wt" + "\xFF",
+]
+
 var VALID_ADDRESS = [
     [
         "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4",
@@ -91,8 +102,9 @@ var INVALID_ADDRESS = [
     "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
     "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-    "tb1pw508d6qejxtdg4y5r3zarqfsj6c3",
+    "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
+    "bc1gmk9yu",
 ];
 
 var didPassTests = true;
@@ -102,6 +114,13 @@ for (var p = 0; p < VALID_CHECKSUM.length; ++p) {
     var ret = bech32.decode(test);
     didPassTests = didPassTests && !!ret;
     console.log("Valid checksum for " + test + ": " + (ret === null ? "fail" : "ok"));
+}
+
+for (var p = 0; p < INVALID_CHECKSUM.length; ++p) {
+    var test = INVALID_CHECKSUM[p];
+    var ret = bech32.decode(test);
+    didPassTests = didPassTests && !ret;
+    console.log("Invalid checksum for " + test + ": " + (ret === null ? "ok" : "fail"));
 }
 
 for (var p = 0; p < VALID_ADDRESS.length; ++p) {
