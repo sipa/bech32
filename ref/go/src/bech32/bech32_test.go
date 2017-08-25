@@ -41,6 +41,17 @@ var validChecksum = []string{
 	"split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
 }
 
+var invalidChecksum = []string{
+	" 1nwldj5",
+	"\x7F" + "1axkwrx",
+	"an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
+	"pzry9x0s0muk",
+	"1pzry9x0s0muk",
+	"x1b4n0q5v",
+	"li1dgmt3",
+	"de1lg7wt\xFF",
+}
+
 type item struct {
 	address      string
 	scriptpubkey []int
@@ -98,8 +109,9 @@ var invalidAddress = []string{
 	"bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
 	"BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
 	"tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-	"tb1pw508d6qejxtdg4y5r3zarqfsj6c3",
+	"bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
 	"tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
+	"bc1gmk9yu",
 }
 
 func TestValidChecksum(t *testing.T) {
@@ -109,6 +121,17 @@ func TestValidChecksum(t *testing.T) {
 			t.Errorf("Valid checksum for %s : FAIL / error %+v\n", test, err)
 		} else {
 			t.Logf("Valid checksum for %s : ok / hrp : %+v , data : %+v\n", test, hrp, data)
+		}
+	}
+}
+
+func TestInvalidChecksum(t *testing.T) {
+	for _, test := range invalidChecksum {
+		hrp, data, err := bech32.Decode(test)
+		if err != nil {
+			t.Logf("Invalid checksum for %s : ok / hrp : %+v , data : %+v\n", test, hrp, data)
+		} else {
+			t.Errorf("Invalid checksum for %s : FAIL\n", test)
 		}
 	}
 }
