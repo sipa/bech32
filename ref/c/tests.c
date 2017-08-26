@@ -12,10 +12,27 @@ static const char* valid_checksum[] = {
     "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
 };
 
+static const char* invalid_checksum[] = {
+    " 1nwldj5",
+    "\x7f""1axkwrx",
+    "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
+    "pzry9x0s0muk",
+    "1pzry9x0s0muk",
+    "x1b4n0q5v",
+    "li1dgmt3",
+    "de1lg7wt\xff",
+};
+
 struct valid_address_data {
     const char* address;
     size_t scriptPubKeyLen;
     const uint8_t scriptPubKey[42];
+};
+
+struct invalid_address_data {
+    const char* hrp;
+    int version;
+    size_t program_length;
 };
 
 static struct valid_address_data valid_address[] = {
@@ -76,8 +93,17 @@ static const char* invalid_address[] = {
     "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
     "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-    "tb1pw508d6qejxtdg4y5r3zarqfsj6c3",
+    "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
+    "bc1gmk9yu",
+};
+
+static struct invalid_address_data invalid_address_enc[] = {
+    {"BC", 0, 20},
+    {"bc", 0, 21},
+    {"bc", 17, 32},
+    {"bc", 1, 1},
+    {"bc", 16, 41},
 };
 
 static void segwit_scriptpubkey(uint8_t* scriptpubkey, size_t* scriptpubkeylen, int witver, const uint8_t* witprog, size_t witprog_len) {
@@ -123,6 +149,17 @@ int main(void) {
         }
         if (ok && my_strncasecmp(rebuild, valid_checksum[i], 92)) {
             printf("bech32_encode produces incorrect result: '%s'\n", valid_checksum[i]);
+            ok = 0;
+        }
+        fail += !ok;
+    }
+    for (i = 0; i < sizeof(invalid_checksum) / sizeof(invalid_checksum[0]); ++i) {
+        uint8_t data[82];
+        char hrp[84];
+        size_t data_len;
+        int ok = 1;
+        if (bech32_decode(hrp, data, &data_len, invalid_checksum[i])) {
+            printf("bech32_decode succeeds on invalid string: '%s'\n", invalid_checksum[i]);
             ok = 0;
         }
         fail += !ok;
@@ -174,6 +211,14 @@ int main(void) {
             ok = 0;
         }
         fail += !ok;
+    }
+    for (i = 0; i < sizeof(invalid_address_enc) / sizeof(invalid_address_enc[0]); ++i) {
+        char rebuild[93];
+        static const uint8_t program[42] = {0};
+        if (segwit_addr_encode(rebuild, invalid_address_enc[i].hrp, invalid_address_enc[i].version, program, invalid_address_enc[i].program_length)) {
+            printf("segwit_addr_encode succeeds on invalid input '%s'\n", rebuild);
+            ++fail;
+        }
     }
     printf("%i failures\n", fail);
     return fail != 0;
