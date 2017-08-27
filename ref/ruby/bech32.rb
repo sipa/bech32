@@ -34,6 +34,8 @@ module Bech32
 
   # Decode a Bech32 string and determine hrp and data
   def decode(bech)
+    # check invalid bytes
+    return nil if bech.scrub('?').include?('?')
     # check uppercase/lowercase
     return nil if (bech.downcase != bech && bech.upcase != bech)
     bech.each_char{|c|return nil if c.ord < 33 || c.ord > 126}

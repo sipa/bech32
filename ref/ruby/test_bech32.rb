@@ -32,6 +32,17 @@ class TestBech32 < Test::Unit::TestCase
       "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
   ]
 
+  INVALID_CHECKSUM = [
+      " 1nwldj5",
+      "\x7F" + "1axkwrx",
+      "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
+      "pzry9x0s0muk",
+      "1pzry9x0s0muk",
+      "x1b4n0q5v",
+      "li1dgmt3",
+      "de1lg7wt\xff",
+  ]
+
   VALID_ADDRESS = [
       ["BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4", "0014751e76e8199196d454941c45d1b3a323f1433bd6"],
       ["tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
@@ -52,16 +63,24 @@ class TestBech32 < Test::Unit::TestCase
       "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
       "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
       "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-      "tb1pw508d6qejxtdg4y5r3zarqfsj6c3",
+      "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
       "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
+      "bc1gmk9yu",
   ]
-
-  def test_verify_checksum
+  
+  def test_valid_checksum
     VALID_CHECKSUM.each do |bech|
       hrp, _ = Bech32.decode(bech)
       assert_not_nil (hrp)
       pos = bech.rindex('1')
       bech = bech[0..pos] + (bech[pos + 1].ord ^ 1).chr + bech[pos+2..-1]
+      hrp, _ = Bech32.decode(bech)
+      assert_nil (hrp)
+    end
+  end
+
+  def test_invalid_checksum
+    INVALID_CHECKSUM.each do |bech|
       hrp, _ = Bech32.decode(bech)
       assert_nil (hrp)
     end
