@@ -39,8 +39,20 @@ public class Main {
             "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
             "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
             "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7", // mixed case
-            "tb1pw508d6qejxtdg4y5r3zarqfsj6c3",
+            "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
             "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
+            "bc1gmk9yu"
+    };
+
+    private static String[] INVALID_CHECKSUM = {
+            " 1nwldj5",
+            new String(new char[] { 0x7f }) + "1axkwrx",
+            "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
+            "pzry9x0s0muk",
+            "1pzry9x0s0muk",
+            "x1b4n0q5v",
+            "li1dgmt3",
+            "de1lg7wt" + new String(new char[] { 0xff }),
     };
 
     public static void main(String[] args) {
@@ -49,7 +61,7 @@ public class Main {
 
             Pair<byte[], byte[]> p = null;
 
-            System.out.println("checksum test");
+            System.out.println("valid checksum test");
             for(String s : VALID_CHECKSUM)   {
 
                 p = null;
@@ -61,6 +73,23 @@ public class Main {
                 catch(Exception e) {
                   System.out.println("Error:" + s + "," + e.getMessage());
                 }
+            }
+
+            System.out.println("invalid checksum test");
+            for(String s : INVALID_CHECKSUM)   {
+
+                p = null;
+
+                try{
+                  p = Bech32.bech32Decode(s);
+                  assert(p.getLeft() == null);
+                }
+                catch(Exception e) {
+                  ;
+                }
+
+                assert(p == null);
+
             }
 
             System.out.println("valid address test");

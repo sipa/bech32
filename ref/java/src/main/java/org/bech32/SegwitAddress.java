@@ -15,6 +15,9 @@ public class SegwitAddress {
 
         byte[] hrpgot = p.getLeft();
         String hrpgotStr =  new String(hrpgot);
+        if(hrpgot == null || hrpgotStr == null)  {
+          return Pair.of(null, null);
+        }
         if (!hrp.equals(hrpgotStr))    {
             throw new Exception("mismatching bech32 human readeable part");
         }
