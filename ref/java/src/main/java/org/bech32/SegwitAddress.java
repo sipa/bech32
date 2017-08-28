@@ -16,10 +16,10 @@ public class SegwitAddress {
         byte[] hrpgot = p.getLeft();
         String hrpgotStr =  new String(hrpgot);
         if(hrpgot == null || hrpgotStr == null)  {
-          return Pair.of(null, null);
+          return null;
         }
         if (!hrp.equals(hrpgotStr))    {
-            throw new Exception("mismatching bech32 human readeable part");
+          return null;
         }
         if (!hrpgotStr.equalsIgnoreCase("bc") && !hrpgotStr.equalsIgnoreCase("tb"))    {
             throw new Exception("invalid segwit human readable part");
@@ -89,7 +89,7 @@ public class SegwitAddress {
             ret.add((byte)((acc << (toBits - bits)) & maxv));
         }
         else if (bits >= fromBits || (byte)(((acc << (toBits - bits)) & maxv)) != 0)    {
-            throw new Exception("panic");
+            return null;
         }
         else    {
             ;

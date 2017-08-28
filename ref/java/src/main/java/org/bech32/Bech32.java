@@ -29,15 +29,15 @@ public class Bech32 {
 
     public static Pair<byte[], byte[]> bech32Decode(String bech) throws Exception  {
 
-        if(!bech.equals(bech.toLowerCase()) && !bech.equals(bech.toUpperCase()))  {
-            throw new Exception("bech32 cannot mix upper and lower case");
-        }
-
         byte[] buffer = bech.getBytes();
         for(byte b : buffer)   {
             if(b < 0x21 || b > 0x7e)    {
-                throw new Exception("bech32 characters  out of range");
+                throw new Exception("bech32 characters out of range");
             }
+        }
+
+        if(!bech.equals(bech.toLowerCase()) && !bech.equals(bech.toUpperCase()))  {
+            throw new Exception("bech32 cannot mix upper and lower case");
         }
 
         bech = bech.toLowerCase();
@@ -134,7 +134,7 @@ public class Bech32 {
 
     private static byte[] createChecksum(byte[] hrp, byte[] data)  {
 
-        byte[] zeroes = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        final byte[] zeroes = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
         byte[] expanded = hrpExpand(hrp);
         byte[] values = new byte[zeroes.length + expanded.length + data.length];
 

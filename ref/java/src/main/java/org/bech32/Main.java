@@ -131,9 +131,9 @@ public class Main {
                   byte[] witProg;
                   Pair<Byte, byte[]> segp = null;
                   segp = SegwitAddress.decode(hrp, s[0]);
+                  assert(segp != null);
                   witVer = segp.getLeft();
                   witProg = segp.getRight();
-
                   assert(!(witVer < 0 || witVer > 16));
 
                   byte[] pubkey = SegwitAddress.getScriptPubkey(witVer, witProg);
