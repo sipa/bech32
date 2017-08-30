@@ -149,6 +149,38 @@ mod tests {
     }
 
     #[test]
+    fn invalid_bech32() {
+        let pairs: Vec<(&str, CodingError)> = vec!(
+            (" 1nwldj5",
+                CodingError::InvalidChar),
+            ("\x7f1axkwrx",
+                CodingError::InvalidChar),
+            ("an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
+                CodingError::InvalidLength),
+            ("pzry9x0s0muk",
+                CodingError::MissingSeparator),
+            ("1pzry9x0s0muk",
+                CodingError::InvalidLength),
+            ("x1b4n0q5v",
+                CodingError::InvalidChar),
+            ("li1dgmt3",
+                CodingError::InvalidLength),
+            ("de1lg7wt\u{ff}",
+                CodingError::InvalidChar),
+        );
+        for p in pairs {
+            let (s, expected_error) = p;
+            let dec_result = bech32::Bech32::from_string(s.to_string());
+            println!("{:?}", s.to_string());
+            if dec_result.is_ok() {
+                println!("{:?}", dec_result.unwrap());
+                panic!("Should be invalid: {:?}", s);
+            }
+            assert_eq!(dec_result.unwrap_err(), expected_error);
+        }
+    }
+
+    #[test]
     fn valid_address() {
         let pairs: Vec<(&str, Vec<u8>)> = vec![
             (
