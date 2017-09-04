@@ -1,5 +1,7 @@
 package org.bech32;
 
+import java.util.Locale;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 public class Bech32 {
@@ -36,7 +38,7 @@ public class Bech32 {
             }
         }
 
-        if(!bech.equals(bech.toLowerCase()) && !bech.equals(bech.toUpperCase()))  {
+        if(!bech.equals(bech.toLowerCase(Locale.ROOT)) && !bech.equals(bech.toUpperCase(Locale.ROOT)))  {
             throw new Exception("bech32 cannot mix upper and lower case");
         }
 
