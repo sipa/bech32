@@ -22,6 +22,18 @@ validChecksums = map BSC.pack
     , "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w"
     ]
 
+invalidChecksums :: [BS.ByteString]
+invalidChecksums = map BSC.pack
+    [ " 1nwldj5"
+    , "\DEL1axkwrx"
+    , "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx"
+    , "pzry9x0s0muk"
+    , "1pzry9x0s0muk"
+    , "x1b4n0q5v"
+    , "li1dgmt3"
+    , "de1lg7wt\xFF"
+    ]
+
 validAddresses :: [(BS.ByteString, BS.ByteString)]
 validAddresses = map mapTuple
     [ ("BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4", "0014751e76e8199196d454941c45d1b3a323f1433bd6")
@@ -46,8 +58,9 @@ invalidAddresses = map BSC.pack
     , "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90"
     , "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P"
     , "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7"
-    , "tb1pw508d6qejxtdg4y5r3zarqfsj6c3"
+    , "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du"
     , "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv"
+    , "bc1gmk9yu"
     ]
 
 hexDecode :: BS.ByteString -> BS.ByteString
@@ -73,6 +86,8 @@ tests = testGroup "Tests"
                 let checksumEncoded = bech32Encode resultHRP resultData
                     expectedChecksum = Just $ BSC.map toLower checksum
                 assertEqual (show checksum ++ " re-encode") expectedChecksum checksumEncoded
+    , testCase "Invalid checksums" $ forM_ invalidChecksums $
+          \checksum -> assertBool (show checksum) (isNothing $ bech32Decode checksum)
     , testCase "Addresses" $ forM_ validAddresses $ \(address, hexscript) -> do
           let address' = BSC.map toLower address
               hrp = BSC.take 2 address'
