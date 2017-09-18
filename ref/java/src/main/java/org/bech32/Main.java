@@ -2,7 +2,6 @@ package org.bech32;
 
 import java.util.Arrays;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.codec.binary.Hex;
 
 public class Main {
@@ -59,7 +58,7 @@ public class Main {
 
         try {
 
-            Pair<byte[], byte[]> p = null;
+            Pair<String, byte[]> p = null;
 
             System.out.println("valid checksum test");
             for(String s : VALID_CHECKSUM)   {
@@ -112,7 +111,7 @@ public class Main {
 
                 try {
                   p = Bech32.bech32Decode(s);
-                  pair = SegwitAddress.decode(new String(p.getLeft()), s);
+                  pair = SegwitAddress.decode(p.getLeft(), s);
                 }
                 catch(Exception e) {
                   ;
@@ -139,7 +138,7 @@ public class Main {
                   byte[] pubkey = SegwitAddress.getScriptPubkey(witVer, witProg);
                   assert(Hex.encodeHexString(pubkey).equalsIgnoreCase(s[1]));
 
-                  String address = SegwitAddress.encode(hrp.getBytes(), witVer, witProg);
+                  String address = SegwitAddress.encode(hrp, witVer, witProg);
                   assert(s[0].equalsIgnoreCase(address));
 
                   int idx = s[0].lastIndexOf("1");
@@ -189,7 +188,7 @@ public class Main {
 
           Hex hex = new Hex();
 
-          String address = SegwitAddress.encode("tb".getBytes(), (byte)0x00, hex.decode("38971f73930f6c141d977ac4fd4a727c854935b3".getBytes()));
+          String address = SegwitAddress.encode("tb", (byte)0x00, hex.decode("38971f73930f6c141d977ac4fd4a727c854935b3".getBytes()));
           System.out.println("BIP49 test vector:" + address);
 
           byte witVer;

@@ -4,18 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.ArrayUtils;
-
 public class SegwitAddress {
 
     public static Pair<Byte, byte[]> decode(String hrp, String addr) throws Exception {
 
-        Pair<byte[], byte[]> p = Bech32.bech32Decode(addr);
+        Pair<String, byte[]> p = Bech32.bech32Decode(addr);
 
-        byte[] hrpgot = p.getLeft();
-        String hrpgotStr =  new String(hrpgot);
-        if(hrpgot == null || hrpgotStr == null)  {
+        String hrpgotStr =  p.getLeft();
+        if(hrpgotStr == null)  {
           return null;
         }
         if (!hrp.equals(hrpgotStr))    {
@@ -26,7 +22,11 @@ public class SegwitAddress {
         }
 
         byte[] data = p.getRight();
-        byte[] decoded = convertBits(Arrays.asList(ArrayUtils.toObject(Arrays.copyOfRange(data, 1, data.length))), 5, 8, false);
+        List<Byte> progBytes = new ArrayList<Byte>();
+        for(int i = 1; i < data.length; i++) {
+            progBytes.add(data[i]);
+        }
+        byte[] decoded = convertBits(progBytes, 5, 8, false);
         if(decoded.length < 2 || decoded.length > 40)   {
             throw new Exception("invalid decoded data length");
         }
@@ -43,9 +43,14 @@ public class SegwitAddress {
         return Pair.of(witnessVersion, decoded);
     }
 
-    public static String encode(byte[] hrp, byte witnessVersion, byte[] witnessProgram) throws Exception    {
+    public static String encode(String hrp, byte witnessVersion, byte[] witnessProgram) throws Exception    {
 
-        byte[] prog = convertBits(Arrays.asList(ArrayUtils.toObject(witnessProgram)), 8, 5, true);
+        List<Byte> progBytes = new ArrayList<Byte>();
+        for(int i = 0; i < witnessProgram.length; i++) {
+            progBytes.add(witnessProgram[i]);
+        }
+
+        byte[] prog = convertBits(progBytes, 8, 5, true);
         byte[] data = new byte[1 + prog.length];
 
         System.arraycopy(new byte[] { witnessVersion }, 0, data, 0, 1);
@@ -95,7 +100,12 @@ public class SegwitAddress {
             ;
         }
 
-        return ArrayUtils.toPrimitive(ret.toArray(new Byte[ret.size()]));
+        byte[] buf = new byte[ret.size()];
+        for(int i = 0; i < ret.size(); i++) {
+            buf[i] = ret.get(i);
+        }
+
+        return buf;
     }
 
     public static byte[] getScriptPubkey(byte witver, byte[] witprog) {

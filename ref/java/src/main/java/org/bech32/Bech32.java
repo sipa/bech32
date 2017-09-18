@@ -2,15 +2,13 @@ package org.bech32;
 
 import java.util.Locale;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 public class Bech32 {
 
     private static final String CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
-    public static String bech32Encode(byte[] hrp, byte[] data) {
+    public static String bech32Encode(String hrp, byte[] data) {
 
-        byte[] chk = createChecksum(hrp, data);
+        byte[] chk = createChecksum(hrp.getBytes(), data);
         byte[] combined = new byte[chk.length + data.length];
 
         System.arraycopy(data, 0, combined, 0, data.length);
@@ -21,15 +19,15 @@ public class Bech32 {
             xlat[i] = (byte)CHARSET.charAt(combined[i]);
         }
 
-        byte[] ret = new byte[hrp.length + xlat.length + 1];
-        System.arraycopy(hrp, 0, ret, 0, hrp.length);
-        System.arraycopy(new byte[] { 0x31 }, 0, ret, hrp.length, 1);
-        System.arraycopy(xlat, 0, ret, hrp.length + 1, xlat.length);
+        byte[] ret = new byte[hrp.getBytes().length + xlat.length + 1];
+        System.arraycopy(hrp.getBytes(), 0, ret, 0, hrp.getBytes().length);
+        System.arraycopy(new byte[] { 0x31 }, 0, ret, hrp.getBytes().length, 1);
+        System.arraycopy(xlat, 0, ret, hrp.getBytes().length + 1, xlat.length);
 
         return new String(ret);
     }
 
-    public static Pair<byte[], byte[]> bech32Decode(String bech) throws Exception  {
+    public static Pair<String, byte[]> bech32Decode(String bech) throws Exception  {
 
         byte[] buffer = bech.getBytes();
         for(byte b : buffer)   {
@@ -81,7 +79,7 @@ public class Bech32 {
         byte[] ret = new byte[data.length - 6];
         System.arraycopy(data, 0, ret, 0, data.length - 6);
 
-        return Pair.of(hrp, ret);
+        return Pair.of(new String(hrp), ret);
     }
 
     private static int polymod(byte[] values)  {
