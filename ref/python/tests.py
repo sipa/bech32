@@ -39,6 +39,17 @@ VALID_CHECKSUM = [
     "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
 ]
 
+INVALID_CHECKSUM = [
+    " 1nwldj5",
+    "\x7F" + "1axkwrx",
+    "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
+    "pzry9x0s0muk",
+    "1pzry9x0s0muk",
+    "x1b4n0q5v",
+    "li1dgmt3",
+    "de1lg7wt\xff",
+]
+
 VALID_ADDRESS = [
     ["BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4", "0014751e76e8199196d454941c45d1b3a323f1433bd6"],
     ["tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
@@ -59,20 +70,36 @@ INVALID_ADDRESS = [
     "bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
     "BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-    "tb1pw508d6qejxtdg4y5r3zarqfsj6c3",
+    "bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
     "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
+    "bc1gmk9yu",
+
+]
+
+INVALID_ADDRESS_ENC = [
+    ("BC", 0, 20),
+    ("bc", 0, 21),
+    ("bc", 17, 32),
+    ("bc", 1, 1),
+    ("bc", 16, 41),
 ]
 
 class TestSegwitAddress(unittest.TestCase):
     """Unit test class for segwit addressess."""
 
-    def test_checksum(self):
+    def test_valid_checksum(self):
         """Test checksum creation and validation."""
         for test in VALID_CHECKSUM:
             hrp, _ = segwit_addr.bech32_decode(test)
             self.assertIsNotNone(hrp)
             pos = test.rfind('1')
             test = test[:pos+1] + chr(ord(test[pos + 1]) ^ 1) + test[pos+2:]
+            hrp, _ = segwit_addr.bech32_decode(test)
+            self.assertIsNone(hrp)
+
+    def test_invalid_checksum(self):
+        """Test validation of invalid checksums."""
+        for test in INVALID_CHECKSUM:
             hrp, _ = segwit_addr.bech32_decode(test)
             self.assertIsNone(hrp)
 
@@ -97,6 +124,12 @@ class TestSegwitAddress(unittest.TestCase):
             self.assertIsNone(witver)
             witver, _ = segwit_addr.decode("tb", test)
             self.assertIsNone(witver)
+
+    def test_invalid_address_enc(self):
+        """Test whether address encoding fails on invalid input."""
+        for hrp, version, length in INVALID_ADDRESS_ENC:
+            code = segwit_addr.encode(hrp, version, [0] * length)
+            self.assertIsNone(code)
 
 if __name__ == "__main__":
     unittest.main()
