@@ -52,7 +52,7 @@ class SegwitAddr
 
   def parse_addr(addr)
     hrp, data = Bech32.decode(addr)
-    raise 'Invalid address.' if hrp.nil? || (hrp != 'bc' && hrp != 'tb')
+    raise 'Invalid address.' if hrp.nil? || data[0].nil? || (hrp != 'bc' && hrp != 'tb')
     ver = data[0]
     raise 'Invalid witness version' if ver > 16
     prog = convert_bits(data[1..-1], 5, 8, false)
