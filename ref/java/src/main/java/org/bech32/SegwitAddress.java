@@ -14,7 +14,7 @@ public class SegwitAddress {
         if(hrpgotStr == null)  {
           return null;
         }
-        if (!hrp.equals(hrpgotStr))    {
+        if (!hrp.equalsIgnoreCase(hrpgotStr))    {
           return null;
         }
         if (!hrpgotStr.equalsIgnoreCase("bc") && !hrpgotStr.equalsIgnoreCase("tb"))    {
