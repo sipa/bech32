@@ -1,12 +1,14 @@
+import Codec.Binary.Bech32 (DecodeError (..), bech32Decode, bech32Encode, segwitDecode,
+                            segwitEncode, word5)
 import Control.Monad (forM_)
 import Data.Bits (xor)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as BSC
 import Data.Char (toLower)
-import Data.Maybe (isNothing, isJust)
+import Data.Either (isLeft)
+import Data.Maybe (isJust, isNothing)
 import Data.Word (Word8)
-import Codec.Binary.Bech32 (bech32Encode, bech32Decode, segwitEncode, segwitDecode, word5)
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -75,19 +77,19 @@ tests :: TestTree
 tests = testGroup "Tests"
     [ testCase "Checksums" $ forM_ validChecksums $ \checksum -> do
           case bech32Decode checksum of
-            Nothing -> assertFailure (show checksum)
-            Just (resultHRP, resultData) -> do
+            Left err -> assertFailure (show checksum ++ show err)
+            Right (resultHRP, resultData) -> do
                 -- test that a corrupted checksum fails decoding.
                 let (hrp, rest) = BSC.breakEnd (== '1') checksum
                     Just (first, rest') = BS.uncons rest
                     checksumCorrupted = (hrp `BS.snoc` (first `xor` 1)) `BS.append` rest'
-                assertBool (show checksum ++ " corrupted") $ isNothing (bech32Decode checksumCorrupted)
+                assertBool (show checksum ++ " corrupted") $ isLeft (bech32Decode checksumCorrupted)
                 -- test that re-encoding the decoded checksum results in the same checksum.
                 let checksumEncoded = bech32Encode resultHRP resultData
                     expectedChecksum = Just $ BSC.map toLower checksum
                 assertEqual (show checksum ++ " re-encode") expectedChecksum checksumEncoded
     , testCase "Invalid checksums" $ forM_ invalidChecksums $
-          \checksum -> assertBool (show checksum) (isNothing $ bech32Decode checksum)
+          \checksum -> assertBool (show checksum) (isLeft $ bech32Decode checksum)
     , testCase "Addresses" $ forM_ validAddresses $ \(address, hexscript) -> do
           let address' = BSC.map toLower address
               hrp = BSC.take 2 address'
@@ -111,8 +113,12 @@ tests = testGroup "Tests"
           assertBool "segwit prog len version != 0" $ isNothing $
               segwitEncode (BSC.pack "bc") 1 (replicate 41 1)
           assertBool "empty HRP encode" $ isNothing $ bech32Encode (BSC.pack "") []
-          assertBool "empty HRP decode" $ isNothing $ bech32Decode (BSC.pack "10a06t8")
+          assertBool "empty HRP decode" $ isError InvalidHRP $ bech32Decode (BSC.pack "10a06t8")
           assertEqual "hrp lowercased"
               (Just $ BSC.pack "hrp1g9xj8m")
               (bech32Encode (BSC.pack "HRP") [])
     ]
+
+isError :: DecodeError -> Either DecodeError a -> Bool
+isError e' (Left e) = e == e'
+isError _ _         = False
