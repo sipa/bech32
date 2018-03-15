@@ -1,5 +1,7 @@
 module Codec.Binary.Bech32
-  ( bech32Encode
+  ( DecodeError(..)
+
+  , bech32Encode
   , bech32Decode
   , toBase32
   , toBase256
@@ -12,13 +14,13 @@ module Codec.Binary.Bech32
 
 import Control.Monad (guard)
 import qualified Data.Array as Arr
-import Data.Bits (Bits, unsafeShiftL, unsafeShiftR, (.&.), (.|.), xor, testBit)
+import Data.Bits (Bits, testBit, unsafeShiftL, unsafeShiftR, xor, (.&.), (.|.))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import Data.Char (toLower, toUpper)
 import Data.Foldable (foldl')
 import Data.Functor.Identity (Identity, runIdentity)
-import Data.Ix (Ix(..))
+import Data.Ix (Ix (..))
 import Data.Word (Word8)
 
 type HRP = BS.ByteString
@@ -29,7 +31,7 @@ type Data = [Word8]
 (.<<.) = unsafeShiftL
 
 newtype Word5 = UnsafeWord5 Word8
-              deriving (Eq, Ord)
+              deriving (Eq, Ord, Show)
 
 instance Ix Word5 where
   range (UnsafeWord5 m, UnsafeWord5 n) = map UnsafeWord5 $ range (m, n)
@@ -79,32 +81,47 @@ bech32VerifyChecksum hrp dat = bech32Polymod (bech32HRPExpand hrp ++ dat) == 1
 
 bech32Encode :: HRP -> [Word5] -> Maybe BS.ByteString
 bech32Encode hrp dat = do
-    guard $ checkHRP hrp
+    guard $ validHRP hrp
     let dat' = dat ++ bech32CreateChecksum hrp dat
         rest = map (charset Arr.!) dat'
         result = BSC.concat [BSC.map toLower hrp, BSC.pack "1", BSC.pack rest]
     guard $ BS.length result <= 90
     return result
 
-checkHRP :: BS.ByteString -> Bool
-checkHRP hrp = not (BS.null hrp) && BS.all (\char -> char >= 33 && char <= 126) hrp
+validHRP :: BS.ByteString -> Bool
+validHRP hrp = not (BS.null hrp) && BS.all (\char -> char >= 33 && char <= 126) hrp
 
-bech32Decode :: BS.ByteString -> Maybe (HRP, [Word5])
+data DecodeError =
+    Bech32StringLengthExceeded
+  | CaseInconsistency
+  | TooShortDataPart
+  | InvalidHRP
+  | ChecksumVerificationFail
+  | InvalidCharsetMap
+  deriving (Show, Eq)
+
+bech32Decode :: BS.ByteString -> Either DecodeError (HRP, [Word5])
 bech32Decode bech32 = do
-    guard $ BS.length bech32 <= 90
-    guard $ BSC.map toUpper bech32 == bech32 || BSC.map toLower bech32 == bech32
+    verify Bech32StringLengthExceeded $ BS.length bech32 <= 90
+    verify CaseInconsistency $ validCase bech32
     let (hrp, dat) = BSC.breakEnd (== '1') $ BSC.map toLower bech32
-    guard $ BS.length dat >= 6
-    hrp' <- BSC.stripSuffix (BSC.pack "1") hrp
-    guard $ checkHRP hrp'
-    dat' <- mapM charsetMap $ BSC.unpack dat
-    guard $ bech32VerifyChecksum hrp' dat'
+    verify TooShortDataPart $ BS.length dat >= 6
+    hrp' <- maybeToRight InvalidHRP $ BSC.stripSuffix (BSC.pack "1") hrp
+    verify InvalidHRP $ validHRP hrp'
+    dat' <- maybeToRight InvalidCharsetMap . mapM charsetMap $ BSC.unpack dat
+    verify ChecksumVerificationFail $ bech32VerifyChecksum hrp' dat'
     return (hrp', take (BS.length dat - 6) dat')
+      where
+        verify :: a -> Bool -> Either a ()
+        verify _ True  = Right ()
+        verify v False = Left v
+        validCase :: BS.ByteString -> Bool
+        validCase b32 = BSC.map toUpper b32 == b32 || BSC.map toLower b32 == b32
 
 type Pad f = Int -> Int -> Word -> [[Word]] -> f [[Word]]
 
 yesPadding :: Pad Identity
-yesPadding _ 0 _ result = return result
+yesPadding _ 0 _ result        = return result
 yesPadding _ _ padValue result = return $ [padValue] : result
 {-# INLINE yesPadding #-}
 
@@ -146,7 +163,7 @@ segwitCheck witver witprog =
 
 segwitDecode :: HRP -> BS.ByteString -> Maybe (Word8, Data)
 segwitDecode hrp addr = do
-    (hrp', dat) <- bech32Decode addr
+    (hrp', dat) <- rightToMaybe $ bech32Decode addr
     guard $ (hrp == hrp') && not (null dat)
     let (UnsafeWord5 witver : datBase32) = dat
     decoded <- toBase256 datBase32
@@ -157,3 +174,9 @@ segwitEncode :: HRP -> Word8 -> Data -> Maybe BS.ByteString
 segwitEncode hrp witver witprog = do
     guard $ segwitCheck witver witprog
     bech32Encode hrp $ UnsafeWord5 witver : toBase32 witprog
+
+rightToMaybe :: Either l r -> Maybe r
+rightToMaybe = either (const Nothing) Just
+
+maybeToRight :: l -> Maybe r -> Either l r
+maybeToRight l = maybe (Left l) Right
