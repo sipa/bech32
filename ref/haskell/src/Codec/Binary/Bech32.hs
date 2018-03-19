@@ -12,7 +12,7 @@ module Codec.Binary.Bech32
   , fromWord5
   ) where
 
-import Control.Monad (guard, when)
+import Control.Monad (guard)
 import qualified Data.Array as Arr
 import Data.Bits (Bits, testBit, unsafeShiftL, unsafeShiftR, xor, (.&.), (.|.))
 import qualified Data.ByteString as BS
@@ -102,16 +102,20 @@ data DecodeError =
 
 bech32Decode :: BS.ByteString -> Either DecodeError (HRP, [Word5])
 bech32Decode bech32 = do
-    when (BS.length bech32 > 90) (Left Bech32StringLengthExceeded)
-    when (not $ validCase bech32) (Left CaseInconsistency)
+    verify (BS.length bech32 <= 90) Bech32StringLengthExceeded
+    verify (validCase bech32) CaseInconsistency
     let (hrp, dat) = BSC.breakEnd (== '1') $ BSC.map toLower bech32
-    when (BS.length dat < 6) (Left TooShortDataPart)
-    hrp' <- maybe (Left InvalidHRP) Right $ BSC.stripSuffix (BSC.pack "1") hrp
-    when (not $ validHRP hrp') (Left InvalidHRP)
-    dat' <- maybe (Left InvalidCharsetMap) Right $ mapM charsetMap $ BSC.unpack dat
-    when (not $ bech32VerifyChecksum hrp' dat') (Left ChecksumVerificationFail)
+    verify (BS.length dat >= 6) TooShortDataPart
+    hrp' <- maybeToRight InvalidHRP $ BSC.stripSuffix (BSC.pack "1") hrp
+    verify (validHRP hrp') InvalidHRP
+    dat' <- maybeToRight InvalidCharsetMap $ mapM charsetMap $ BSC.unpack dat
+    verify (bech32VerifyChecksum hrp' dat') ChecksumVerificationFail
     return (hrp', take (BS.length dat - 6) dat')
       where
+        verify :: Bool -> a -> Either a ()
+        verify True _  = Right ()
+        verify False v = Left v
+        validCase :: BS.ByteString -> Bool
         validCase b32 = BSC.map toUpper b32 == b32 || BSC.map toLower b32 == b32
 
 type Pad f = Int -> Int -> Word -> [[Word]] -> f [[Word]]
@@ -173,3 +177,6 @@ segwitEncode hrp witver witprog = do
 
 rightToMaybe :: Either l r -> Maybe r
 rightToMaybe = either (const Nothing) Just
+
+maybeToRight :: l -> Maybe r -> Either l r
+maybeToRight l = maybe (Left l) Right
