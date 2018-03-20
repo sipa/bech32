@@ -1,5 +1,7 @@
 module Codec.Binary.Bech32
-  ( DecodeError(..)
+  (
+    DecodeError(..)
+  , EncodeError(..)
 
   , bech32Encode
   , bech32Decode
@@ -79,13 +81,18 @@ bech32CreateChecksum hrp dat = [word5 (polymod .>>. i) | i <- [25,20..0]]
 bech32VerifyChecksum :: HRP -> [Word5] -> Bool
 bech32VerifyChecksum hrp dat = bech32Polymod (bech32HRPExpand hrp ++ dat) == 1
 
-bech32Encode :: HRP -> [Word5] -> Maybe BS.ByteString
+data EncodeError =
+      ResultStringLengthExceeded
+    | InvalidHumanReadablePart
+    deriving (Show, Eq)
+
+bech32Encode :: HRP -> [Word5] -> Either EncodeError BS.ByteString
 bech32Encode hrp dat = do
-    guard $ validHRP hrp
+    verify (validHRP hrp) InvalidHumanReadablePart
     let dat' = dat ++ bech32CreateChecksum hrp dat
         rest = map (charset Arr.!) dat'
         result = BSC.concat [BSC.map toLower hrp, BSC.pack "1", BSC.pack rest]
-    guard $ BS.length result <= 90
+    verify (BS.length result <= 90) ResultStringLengthExceeded
     return result
 
 validHRP :: BS.ByteString -> Bool
@@ -112,9 +119,6 @@ bech32Decode bech32 = do
     verify (bech32VerifyChecksum hrp' dat') ChecksumVerificationFail
     return (hrp', take (BS.length dat - 6) dat')
       where
-        verify :: Bool -> a -> Either a ()
-        verify True _  = Right ()
-        verify False v = Left v
         validCase :: BS.ByteString -> Bool
         validCase b32 = BSC.map toUpper b32 == b32 || BSC.map toLower b32 == b32
 
@@ -173,10 +177,14 @@ segwitDecode hrp addr = do
 segwitEncode :: HRP -> Word8 -> Data -> Maybe BS.ByteString
 segwitEncode hrp witver witprog = do
     guard $ segwitCheck witver witprog
-    bech32Encode hrp $ UnsafeWord5 witver : toBase32 witprog
+    rightToMaybe $ bech32Encode hrp $ UnsafeWord5 witver : toBase32 witprog
 
 rightToMaybe :: Either l r -> Maybe r
 rightToMaybe = either (const Nothing) Just
 
 maybeToRight :: l -> Maybe r -> Either l r
 maybeToRight l = maybe (Left l) Right
+
+verify :: Bool -> a -> Either a ()
+verify True _  = Right ()
+verify False v = Left v
