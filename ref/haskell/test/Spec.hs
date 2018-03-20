@@ -1,5 +1,5 @@
-import Codec.Binary.Bech32 (DecodeError (..), bech32Decode, bech32Encode, segwitDecode,
-                            segwitEncode, word5)
+import Codec.Binary.Bech32 (DecodeError (..), EncodeError (..), bech32Decode, bech32Encode,
+                            segwitDecode, segwitEncode, word5)
 import Control.Monad (forM_)
 import Data.Bits (xor)
 import qualified Data.ByteString as BS
@@ -85,7 +85,7 @@ tests = testGroup "Tests"
                 assertBool (show checksum ++ " corrupted") $ isLeft (bech32Decode checksumCorrupted)
                 -- test that re-encoding the decoded checksum results in the same checksum.
                 let checksumEncoded = bech32Encode resultHRP resultData
-                    expectedChecksum = Just $ BSC.map toLower checksum
+                    expectedChecksum = Right $ BSC.map toLower checksum
                 assertEqual (show checksum ++ " re-encode") expectedChecksum checksumEncoded
     , testCase "Invalid checksums" $ forM_ invalidChecksums $
           \checksum -> assertBool (show checksum) (isLeft $ bech32Decode checksum)
@@ -101,7 +101,7 @@ tests = testGroup "Tests"
           assertBool (show address) (isNothing $ segwitDecode (BSC.pack "bc") address)
           assertBool (show address) (isNothing $ segwitDecode (BSC.pack "tb") address)
     , testCase "More Encoding/Decoding Cases" $ do
-          assertBool "length > 90" $ isNothing $
+          assertBool "length > 90" $ isError ResultStringLengthExceeded $
               bech32Encode (BSC.pack "bc") (replicate 82 (word5 (1::Word8)))
           assertBool "segwit version bounds" $ isNothing $
               segwitEncode (BSC.pack "bc") 17 []
@@ -111,13 +111,13 @@ tests = testGroup "Tests"
               segwitEncode (BSC.pack "bc") 1 (replicate 30 1)
           assertBool "segwit prog len version != 0" $ isNothing $
               segwitEncode (BSC.pack "bc") 1 (replicate 41 1)
-          assertBool "empty HRP encode" $ isNothing $ bech32Encode (BSC.pack "") []
+          assertBool "empty HRP encode" $ isError InvalidHumanReadablePart $ bech32Encode (BSC.pack "") []
           assertBool "empty HRP decode" $ isError InvalidHRP $ bech32Decode (BSC.pack "10a06t8")
           assertEqual "hrp lowercased"
-              (Just $ BSC.pack "hrp1g9xj8m")
+              (Right $ BSC.pack "hrp1g9xj8m")
               (bech32Encode (BSC.pack "HRP") [])
     ]
 
-isError :: DecodeError -> Either DecodeError a -> Bool
+isError :: Eq a => a -> Either a b -> Bool
 isError e' (Left e) = e == e'
 isError _ _         = False
