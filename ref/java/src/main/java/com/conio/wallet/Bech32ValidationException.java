@@ -20,7 +20,9 @@
  * # THE SOFTWARE.
  */
 
-package com.conio.wallet;public class Bech32ValidationException extends IllegalArgumentException {
+package com.conio.wallet;
+
+public class Bech32ValidationException extends IllegalArgumentException {
     Bech32ValidationException() {
         super();
     }
@@ -34,7 +36,7 @@ package com.conio.wallet;public class Bech32ValidationException extends IllegalA
         final int position;
 
         InvalidCharacter(char character, int position) {
-            super("Invalid character '" + character + "' at position " + position);
+            super("Invalid character '" + Character.toString(character) + "' at position " + position);
             this.character = character;
             this.position = position;
         }

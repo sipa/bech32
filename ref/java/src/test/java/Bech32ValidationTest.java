@@ -26,24 +26,20 @@ import com.conio.wallet.SegwitAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class Bech32ValidationTest {
 
     // Classes Under Tests
 
-    private static SegwitAddress mSegwitAddress = new SegwitAddress();
-    private static Bech32 mBech32 = new Bech32();
-
-    public static void main(String[] args) {
-        testValidChecksums();
-        testInvalidChecksum();
-        testValidAddress();
-        testInvalidAddress();
-    }
+    private SegwitAddress mSegwitAddress = new SegwitAddress();
+    private Bech32 mBech32 = new Bech32();
 
     // Checksums
 
-    private static void testValidChecksums() throws Bech32ValidationException {
+    @Test
+    public void testValidChecksums() throws Bech32ValidationException {
         String[] validChecksums = TestVectors.validChecksums;
         int validChecksumCount = 0;
         for (String checksum: validChecksums) {
@@ -53,9 +49,11 @@ public class Bech32ValidationTest {
 
         boolean testPassed = validChecksumCount == validChecksums.length;
         communicateResult("[Valid Checksum]", testPassed);
+        Assert.assertTrue(testPassed);
     }
 
-    private static void testInvalidChecksum() {
+    @Test
+    public void testInvalidChecksum() {
         String[] invalidChecksums = TestVectors.invalidChecksums;
         int validChecksumCount = 0;
         for (String checksum: invalidChecksums) {
@@ -67,11 +65,13 @@ public class Bech32ValidationTest {
 
         boolean testPassed = validChecksumCount == 0;
         communicateResult("[Invalid Checksum]", testPassed);
+        Assert.assertTrue(testPassed);
     }
 
     // Addresses
 
-    private static void testValidAddress() {
+    @Test
+    public void testValidAddress() {
         int index = 0;
         for (String address: TestVectors.validAddress) {
             String hrp = "bc";
@@ -89,24 +89,27 @@ public class Bech32ValidationTest {
             int[] scriptPubKey = scriptPubKey(decoded.getWitnessVersion(), decoded.getProgram());
 
             boolean arePubKeysEqual = Arrays.equals(expectedScriptPubKey, scriptPubKey);
-            communicateResult("[Valid address " + address + " pub key match]", arePubKeysEqual);
             index++;
+            communicateResult("[Valid address " + address + " pub key match]", arePubKeysEqual);
+            Assert.assertTrue(arePubKeysEqual);
         }
     }
 
-    private static void testInvalidAddress() {
+    @Test
+    public void testInvalidAddress() {
         for (String address: TestVectors.invalidAddress) {
             SegwitAddress main = mSegwitAddress.decode(address, "bc");
             if (main == null) communicateResult("[Invalid address " + address + " not decoded]", true);
             SegwitAddress test = mSegwitAddress.decode(address, "tb");
             if (test == null) communicateResult("[Invalid address " + address + " not decoded]", true);
-
+            Assert.assertNull(main);
+            Assert.assertNull(test);
         }
     }
 
     // Script Pub Key
 
-    private static int[] scriptPubKey(int version, List<Integer> program) {
+    private int[] scriptPubKey(int version, List<Integer> program) {
         List<Integer> res = new ArrayList<>();
         res.add(version != 0 ? version + 0x50 : 0);
         res.add(program.size());
@@ -115,7 +118,7 @@ public class Bech32ValidationTest {
         return listToByteArray(res);
     }
 
-    private static int[] listToByteArray(List<Integer> list) {
+    private int[] listToByteArray(List<Integer> list) {
         int length = list.size();
         int[] output = new int[length];
 
@@ -126,7 +129,7 @@ public class Bech32ValidationTest {
         return output;
     }
 
-    private static void communicateResult(String testName, boolean result) {
+    private void communicateResult(String testName, boolean result) {
         String returnValue = result ? "OK" : "FAILED";
         System.out.println(testName + " [" + returnValue + "]");
     }
