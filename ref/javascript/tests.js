@@ -91,6 +91,9 @@ var VALID_ADDRESS = [
             0xe9, 0x1c, 0x6c, 0xe2, 0x4d, 0x16, 0x5d, 0xab, 0x93, 0xe8, 0x64,
             0x33
         ]
+    ],
+    [
+        "zs1xylu42dht08zy4p5c7lgzhh42m350c0sppgqcxwvjvwqraxgq9m9yj356egmatn0q88zvu3jyu0"
     ]
 ];
 
@@ -127,8 +130,12 @@ for (var p = 0; p < VALID_ADDRESS.length; ++p) {
     var test = VALID_ADDRESS[p];
     var address = test[0];
     var scriptpubkey = test[1];
-    var hrp = "bc";
+    var hrp = "zs";
     var ret = segwit_addr.decode(hrp, address);
+    if (ret === null) {
+        hrp = "bc";
+        ret = segwit_addr.decode(hrp, address);
+    }
     if (ret === null) {
         hrp = "tb";
         ret = segwit_addr.decode(hrp, address);
@@ -136,8 +143,10 @@ for (var p = 0; p < VALID_ADDRESS.length; ++p) {
     var ok = ret !== null;
     var output;
     if (ok) {
-        output = segwit_scriptpubkey(ret.version, ret.program);
-        ok = ("" + output == "" +scriptpubkey);
+        if (hrp !== "zs") {
+            output = segwit_scriptpubkey(ret.version, ret.program);
+            ok = ("" + output == "" + scriptpubkey);
+        }
     }
     if (ok) {
         var recreate = segwit_addr.encode(hrp, ret.version, ret.program);

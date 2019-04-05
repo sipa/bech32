@@ -54,21 +54,26 @@ function convertbits (data, frombits, tobits, pad) {
 
 function decode (hrp, addr) {
   var dec = bech32.decode(addr);
-  if (dec === null || dec.hrp !== hrp || dec.data.length < 1 || dec.data[0] > 16) {
-    return null;
-  }
-  var res = convertbits(dec.data.slice(1), 5, 8, false);
-  if (res === null || res.length < 2 || res.length > 40) {
-    return null;
-  }
-  if (dec.data[0] === 0 && res.length !== 20 && res.length !== 32) {
+  if (dec === null || dec.hrp !== hrp ||
+    (hrp === 'zs' && dec.data.length < 68) ||
+    (hrp !== 'zs' && (dec.data.length < 1 || dec.data[0] > 16))
+  ) return null;
+
+  var res = convertbits(hrp === 'zs' ? dec.data : dec.data.slice(1), 5, 8, false);
+  if (res === null ||
+    (hrp === 'zs' && res.length < 42) ||
+    (hrp !== 'zs' && (res.length < 2 || res.length > 40))
+  ) return null;
+
+  if (hrp !== 'zs' && (dec.data[0] === 0 && res.length !== 20 && res.length !== 32)) {
     return null;
   }
   return {version: dec.data[0], program: res};
 }
 
 function encode (hrp, version, program) {
-  var ret = bech32.encode(hrp, [version].concat(convertbits(program, 8, 5, true)));
+  var convertedBits = hrp === 'zs' ? convertbits(program, 8, 5, true) : [version].concat(convertbits(program, 8, 5, true));
+  var ret = bech32.encode(hrp, convertedBits);
   if (decode(hrp, ret) === null) {
     return null;
   }
