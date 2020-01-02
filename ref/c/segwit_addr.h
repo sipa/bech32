@@ -89,7 +89,7 @@ int bech32_encode(
  *       data_len: Pointer to a size_t that will be updated to be the number
  *                 of entries in data.
  *  In: input:     Pointer to a null-terminated Bech32 string.
- *  Returns 1 if succesful.
+ *  Returns 1 if successful.
  */
 int bech32_decode(
     char *hrp,
@@ -97,5 +97,17 @@ int bech32_decode(
     size_t *data_len,
     const char *input
 );
+
+/** Change bit encoding 
+ *  Out: out: pointer to a buffer containing re-encoded data
+ *       outlen: pointer the length of the output buffer
+ *  In:  outbits: bit length of the encoded output 
+ *       in: pointer to a buffer containing data to be encoded
+ *       inlen: length of the input buffer
+ *       inbits: bit length of the input
+ *       pad: enable padding
+ *  Returns 1 if successful.
+ */
+int convert_bits(uint8_t* out, size_t* outlen, int outbits, const uint8_t* in, size_t inlen, int inbits, int pad);
 
 #endif
