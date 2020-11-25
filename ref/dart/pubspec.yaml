@@ -1,0 +1,7 @@
+name: segwit
+description: segwit address encoding
+publish_to: 'none'
+
+dependencies:
+  convert: ^2.1.1
+  test: any
