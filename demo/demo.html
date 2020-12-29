@@ -30,13 +30,13 @@ function toHexString(byteArray) {
 function update_status() {
     var address = document.getElementById("address").value;
     var res = segwit_addr_ecc.check(address, ["bc", "tb"]);
-    var cp = "";
+    var cp = "<br/>";
     if (res.error === null) {
         document.getElementById("result").innerHTML = "<a style=\"color:green\">Ok, witness version " + res.version + ", program " + toHexString(res.program) + "</a>";
-        cp = "<br/>";
     } else {
         document.getElementById("result").innerHTML = res.error;
         if (res.pos !== null) {
+            cp = "";
             for (var p = 0; p < address.length; ++p) {
                 if (res.pos.indexOf(p) != -1) {
                     cp += "<a style=\"color:red\">" + address.charAt(p) + "</a>";
@@ -59,11 +59,11 @@ function load_addr(addr) {
             <div class="card mb-3 text-left">
                 <h3 class="card-header">SegWit address format</h3>
                 <div class="card-block">
-                    <p><a href="https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki">BIP 173</a> is a proposal for a new SegWit address format to replace <a href="https://github.com/bitcoin/bips/blob/master/bip-0142.mediawiki">BIP 142</a>.
+                    <p><a href="https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki">BIP 173</a> defines the address format used for native segwit outputs.
                     This format is not required for using segwit, but is more
-                    efficient, flexible, and nicer to use.</p>
+                    efficient, flexible, and nicer to use than the compatibility P2SH wrapper format.</p>
 
-                    <p>The format is base 32 and uses a simple checksum algorithm with strong
+                    <p>The used Bech32 encoding is generally usable and uses a simple checksum algorithm with strong
                     error detection properties. Reference code in several languages as
                     well as a website demonstrating it are included.</p>
 
@@ -73,6 +73,20 @@ function load_addr(addr) {
                     <ul>
                     <li><a href="https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2017-March/013749.html">Mailinglist announcement</a></li>
                     <li>SF Bitcoin devs talk: <a href="https://www.youtube.com/watch?v=NqiN9VFE4CU">Video</a>, <a href="https://prezi.com/gwnjkqjqjjbz/bech32-a-base32-address-format/">Presentation</a>, <a href="https://diyhpl.us/wiki/transcripts/sf-bitcoin-meetup/2017-03-29-new-address-type-for-segwit-addresses/">Transcript by Bryan Bishop</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-3 text-left">
+                <h3 class="card-header">Bech32m for version 1 witnesses and higher</h3>
+                <div class="card-block">
+                    <p>To address <a href="https://github.com/sipa/bech32/issues/51">weaknesses</a> discovered in Bech32, <a href="https://github.com/sipa/bips/blob/bip-bech32m/bip-0350.mediawiki">BIP 350</a> proposes using an improved format called Bech32m
+                    for addresses for witness versions 1 and higher. Such addresses would be used by the <a href="https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki">Taproot</a> proposal.</p>
+
+                    <ul>
+                    <li><a href="https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2020-October/018236.html">Mailinglist discussion</a></li>
+                    <li><a href="https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-January/018338.html">BIP discussion</a></li>
+                    <li><a href="https://github.com/bitcoin/bips/pull/1056">BIP PR</a></li>
                     </ul>
                 </div>
             </div>
@@ -93,6 +107,8 @@ function load_addr(addr) {
                     <li> <a class="demo_link" href='javascript:load_addr("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4");'>P2WPKH example</a>
                     <li> <a class="demo_link" href='javascript:load_addr("BC1QW508D6QEJXTDG4Y5R3ZARVAYR0C5XW7KV8F3T4");'>P2WPKH example with errors</a>
                     <li> <a class="demo_link" href='javascript:load_addr("bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3");'>P2WSH example</a>
+                    <li> <a class="demo_link" href='javascript:load_addr("bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0");'>P2TR example (proposed)</a>
+                    <li> <a class="demo_link" href='javascript:load_addr("bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqh2y7hd");'>P2TR example with errors (using Bech32 instead of Bech32m)</a>
                     </ul>
                 </div>
             </div>

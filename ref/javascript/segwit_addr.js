@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Pieter Wuille
+// Copyright (c) 2017, 2021 Pieter Wuille
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,12 @@ function convertbits (data, frombits, tobits, pad) {
 }
 
 function decode (hrp, addr) {
-  var dec = bech32.decode(addr);
+  var bech32m = false;
+  var dec = bech32.decode(addr, bech32.encodings.BECH32);
+  if (dec === null) {
+    dec = bech32.decode(addr, bech32.encodings.BECH32M);
+    bech32m = true;
+  }
   if (dec === null || dec.hrp !== hrp || dec.data.length < 1 || dec.data[0] > 16) {
     return null;
   }
@@ -64,12 +69,22 @@ function decode (hrp, addr) {
   if (dec.data[0] === 0 && res.length !== 20 && res.length !== 32) {
     return null;
   }
+  if (dec.data[0] === 0 && bech32m) {
+    return null;
+  }
+  if (dec.data[0] !== 0 && !bech32m) {
+    return null;
+  }
   return {version: dec.data[0], program: res};
 }
 
 function encode (hrp, version, program) {
-  var ret = bech32.encode(hrp, [version].concat(convertbits(program, 8, 5, true)));
-  if (decode(hrp, ret) === null) {
+  var enc = bech32.encodings.BECH32;
+  if (version > 0) {
+    enc = bech32.encodings.BECH32M;
+  }
+  var ret = bech32.encode(hrp, [version].concat(convertbits(program, 8, 5, true)), enc);
+  if (decode(hrp, ret, enc) === null) {
     return null;
   }
   return ret;
