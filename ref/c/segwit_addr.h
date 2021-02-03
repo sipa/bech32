@@ -24,6 +24,13 @@
 
 #include <stdint.h>
 
+/** Supported encodings. */
+typedef enum {
+    BECH32_ENCODING_NONE,
+    BECH32_ENCODING_BECH32,
+    BECH32_ENCODING_BECH32M
+} bech32_encoding;
+
 
 /** Encode a SegWit address
  *
@@ -65,12 +72,28 @@ int segwit_addr_decode(
     const char* addr
 );
 
-/** Supported encodings. */
-typedef enum {
-    BECH32_ENCODING_NONE,
-    BECH32_ENCODING_BECH32,
-    BECH32_ENCODING_BECH32M
-} bech32_encoding;
+
+/** Decode a SegWit address, capturing details.
+ *
+ *  Out: ver:      Pointer to an int that will be updated to contain the witness
+ *                 program version (between 0 and 16 inclusive).
+ *       prog:     Pointer to a buffer of size 40 that will be updated to
+ *                 contain the witness program bytes.
+ *       prog_len: Pointer to a size_t that will be updated to contain the length
+ *                 of bytes in prog.
+ *       hrp_out:  Pointer to char[10] to hold observed HRP value, or NULL if not wanted.
+ *       encoding: Pointer to return observed bech32 encoding (or NULL, unused)
+ *       addr:     Pointer to the null-terminated address.
+ *  Returns 1 if successful.
+ */
+int segwit_addr_decode_detailed(
+    int* ver,
+    uint8_t* prog,
+    size_t* prog_len,
+    char *hrp_out,
+    bech32_encoding* encoding,
+    const char* addr
+);
 
 /** Encode a Bech32 or Bech32m string
  *
