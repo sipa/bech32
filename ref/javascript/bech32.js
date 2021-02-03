@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Pieter Wuille
+// Copyright (c) 2017, 2021 Pieter Wuille
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,26 @@
 var CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 var GENERATOR = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
 
+const encodings = {
+  BECH32: "bech32",
+  BECH32M: "bech32m",
+};
+
 module.exports = {
   decode: decode,
   encode: encode,
+  encodings: encodings,
 };
 
+function getEncodingConst (enc) {
+  if (enc == encodings.BECH32) {
+    return 1;
+  } else if (enc == encodings.BECH32M) {
+    return 0x2bc830a3;
+  } else {
+    return null;
+  }
+}
 
 function polymod (values) {
   var chk = 1;
@@ -54,13 +69,13 @@ function hrpExpand (hrp) {
   return ret;
 }
 
-function verifyChecksum (hrp, data) {
-  return polymod(hrpExpand(hrp).concat(data)) === 1;
+function verifyChecksum (hrp, data, enc) {
+  return polymod(hrpExpand(hrp).concat(data)) === getEncodingConst(enc);
 }
 
-function createChecksum (hrp, data) {
+function createChecksum (hrp, data, enc) {
   var values = hrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]);
-  var mod = polymod(values) ^ 1;
+  var mod = polymod(values) ^ getEncodingConst(enc);
   var ret = [];
   for (var p = 0; p < 6; ++p) {
     ret.push((mod >> 5 * (5 - p)) & 31);
@@ -68,8 +83,8 @@ function createChecksum (hrp, data) {
   return ret;
 }
 
-function encode (hrp, data) {
-  var combined = data.concat(createChecksum(hrp, data));
+function encode (hrp, data, enc) {
+  var combined = data.concat(createChecksum(hrp, data, enc));
   var ret = hrp + '1';
   for (var p = 0; p < combined.length; ++p) {
     ret += CHARSET.charAt(combined[p]);
@@ -77,7 +92,7 @@ function encode (hrp, data) {
   return ret;
 }
 
-function decode (bechString) {
+function decode (bechString, enc) {
   var p;
   var has_lower = false;
   var has_upper = false;
@@ -109,7 +124,7 @@ function decode (bechString) {
     }
     data.push(d);
   }
-  if (!verifyChecksum(hrp, data)) {
+  if (!verifyChecksum(hrp, data, enc)) {
     return null;
   }
   return {hrp: hrp, data: data.slice(0, data.length - 6)};

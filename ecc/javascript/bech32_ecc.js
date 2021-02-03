@@ -147,8 +147,24 @@ var GF1024_LOG = [
   452, 710, 552, 128, 612, 600, 275, 322, 193
 ];
 
+const encodings = {
+  BECH32: "bech32",
+  BECH32M: "bech32m",
+};
+
+function getEncodingConst (encoding) {
+  if (encoding == encodings.BECH32) {
+    return 1;
+  } else if (encoding == encodings.BECH32M) {
+    return 0x2bc830a3;
+  } else {
+    return null;
+  }
+}
+
 module.exports = {
   check: check,
+  encodings: encodings,
 };
 
 function syndrome (residue) {
@@ -258,7 +274,7 @@ function range (from, to) {
   return ret;
 }
 
-function check (bechString, validHrp) {
+function check (bechString, validHrp, encoding) {
   if (bechString.length > 90) {
       return {error:"Too long", pos:range(90, bechString.length)};
   }
@@ -298,16 +314,19 @@ function check (bechString, validHrp) {
   if (validHrp.indexOf(hrp) == -1) {
     return {error:"Unknown part before the separator '1'", pos:range(0, hrp.length)};
   }
-  var residue = polymod(hrpExpand(hrp).concat(data)) ^ 1;
+  var residue = polymod(hrpExpand(hrp).concat(data)) ^ getEncodingConst(encoding);
   if (residue != 0) {
-    var epos = locate_errors(residue, bechString.length - 1);
-    if (epos.length == 0) {
-      return {error:"Invalid", pos:null};
+    var epos = locate_errors(residue, data.length);
+    if (epos.length == 0) return {error:"Invalid checksum", data_pattern:null};
+    pattern = [];
+    for (var pos = 0; pos < data.length; ++pos) {
+      if (epos.includes(data.length - 1 - pos)) {
+        pattern.push(-1);
+      } else {
+        pattern.push(data[pos]);
+      }
     }
-    for (var ep = 0; ep < epos.length; ++ep) {
-      epos[ep] = bechString.length - epos[ep] - (epos[ep] >= data.length ? 2 : 1);
-    }
-    return {error:"Invalid", pos:epos};
+    return {error:"Invalid checksum", data_pattern:pattern};
   }
   return {error:null, hrp:hrp, data:data.slice(0, -6)};
 }

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Pieter Wuille
+/* Copyright (c) 2017, 2021 Pieter Wuille
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,17 +19,43 @@
  * THE SOFTWARE.
  */
 
-#include <stdint.h>
-#include <vector>
+#ifndef BECH32_H_
+#define BECH32_H_ 1
+
 #include <string>
+#include <tuple>
+#include <vector>
+
+#include <stdint.h>
 
 namespace bech32
 {
 
-/** Encode a Bech32 string. Returns the empty string in case of failure. */
-std::string encode(const std::string& hrp, const std::vector<uint8_t>& values);
+enum class Encoding {
+    INVALID,
 
-/** Decode a Bech32 string. Returns (hrp, data). Empty hrp means failure. */
-std::pair<std::string, std::vector<uint8_t> > decode(const std::string& str);
+    BECH32,  //! Bech32 encoding as defined in BIP173
+    BECH32M, //! Bech32m encoding as defined in bip-bech32m
+};
 
-}
+/** Encode a Bech32 or Bech32m string. If hrp contains uppercase characters, this will cause an
+ *  assertion error. Encoding must be one of BECH32 or BECH32M. */
+std::string encode(const std::string& hrp, const std::vector<uint8_t>& values, Encoding encoding);
+
+/** A type for the result of decoding. */
+struct DecodeResult
+{
+    Encoding encoding;         //!< What encoding was detected in the result; Encoding::INVALID if failed.
+    std::string hrp;           //!< The human readable part
+    std::vector<uint8_t> data; //!< The payload (excluding checksum)
+
+    DecodeResult() : encoding(Encoding::INVALID) {}
+    DecodeResult(Encoding enc, std::string&& h, std::vector<uint8_t>&& d) : encoding(enc), hrp(std::move(h)), data(std::move(d)) {}
+};
+
+/** Decode a Bech32 or Bech32m string. */
+DecodeResult decode(const std::string& str);
+
+}  // namespace bech32
+
+#endif  // BECH32_H_
