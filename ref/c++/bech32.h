@@ -35,7 +35,7 @@ enum class Encoding {
     INVALID,
 
     BECH32,  //! Bech32 encoding as defined in BIP173
-    BECH32M, //! Bech32m encoding as defined in bip-bech32m
+    BECH32M, //! Bech32m encoding as defined in BIP350
 };
 
 /** Encode a Bech32 or Bech32m string. If hrp contains uppercase characters, this will cause an
