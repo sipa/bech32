@@ -175,7 +175,7 @@ class TestSegwitAddress(unittest.TestCase):
                 witver, witprog = segwit_addr.decode(hrp, address)
             self.assertIsNotNone(witver, address)
             scriptpubkey = segwit_scriptpubkey(witver, witprog)
-            self.assertEqual(scriptpubkey, binascii.unhexlify(hexscript))
+            self.assertEqual(scriptpubkey, bytes([int(elem.encode("hex"),16) for elem in binascii.unhexlify(hexscript)]))
             addr = segwit_addr.encode(hrp, witver, witprog)
             self.assertEqual(address.lower(), addr)
 
