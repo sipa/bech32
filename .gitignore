@@ -1,0 +1,4 @@
+.DS_Store
+/ref/java/out
+/ref/java/build
+/ref/java/.gradle
