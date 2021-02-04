@@ -92,6 +92,11 @@ class TestBech32 < Test::Unit::TestCase
       assert_not_nil(segwit_addr.ver)
       assert_equal(hex, segwit_addr.to_scriptpubkey)
       assert_equal(addr.downcase, segwit_addr.addr)
+      # test from hex
+      segwit_addr = SegwitAddr.new
+      segwit_addr.hrp = addr[0..1].downcase
+      segwit_addr.scriptpubkey = hex
+      assert_equal(addr.downcase, segwit_addr.addr)
     end
   end
 

@@ -37,7 +37,7 @@ class SegwitAddr
 
   def scriptpubkey=(script)
     values = [script].pack('H*').unpack("C*")
-    @ver = values[0]
+    @ver = values[0] == 0 ? values[0] : values[0] - 0x50
     @prog = values[2..-1]
   end
 
