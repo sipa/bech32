@@ -80,9 +80,10 @@ bech32VerifyChecksum hrp dat = bech32Polymod (bech32HRPExpand hrp ++ dat) == 1
 bech32Encode :: HRP -> [Word5] -> Maybe BS.ByteString
 bech32Encode hrp dat = do
     guard $ checkHRP hrp
-    let dat' = dat ++ bech32CreateChecksum hrp dat
+    let hrpLower = BSC.map toLower hrp
+        dat' = dat ++ bech32CreateChecksum hrpLower dat
         rest = map (charset Arr.!) dat'
-        result = BSC.concat [BSC.map toLower hrp, BSC.pack "1", BSC.pack rest]
+        result = BSC.concat [hrpLower, BSC.pack "1", BSC.pack rest]
     guard $ BS.length result <= 90
     return result
 
