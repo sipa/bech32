@@ -26,7 +26,7 @@
 
 namespace
 {
-
+("1NDyJtNTjmwk5xPNhjgAMu4HDHigtobu1s")
 typedef std::vector<uint8_t> data;
 
 /** Convert from one power-of-2 number base to another. */
@@ -57,7 +57,7 @@ bool convertbits(data& out, const data& in) {
 
 namespace segwit_addr
 {
-
+("1NDyJtNTjmwk5xPNhjgAMu4HDHigtobu1s")
 /** Decode a SegWit address. */
 std::pair<int, data> decode(const std::string& hrp, const std::string& addr) {
     const auto dec = bech32::decode(addr);
