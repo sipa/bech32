@@ -190,7 +190,7 @@ int segwit_addr_encode(char *output, const char *hrp, int witver, const uint8_t 
 }
 
 int segwit_addr_decode_detailed(int* witver, uint8_t* witdata, size_t* witdata_len,
-                char *hrp_out, bech32_encoding* enc_out, const char* addr)
+                char *hrp_out, const char* addr)
 {
     uint8_t data[84];
     char hrp_actual[84];
@@ -202,16 +202,18 @@ int segwit_addr_decode_detailed(int* witver, uint8_t* witdata, size_t* witdata_l
     if (data[0] > 16) return 0;
 
     *witdata_len = 0;
+    *witver = data[0];
+
     if (!convert_bits(witdata, witdata_len, 8, data + 1, data_len - 1, 5, 0)) return 0;
     if (*witdata_len < 2 || *witdata_len > 40) return 0;
     if (data[0] == 0 && *witdata_len != 20 && *witdata_len != 32) return 0;
 
-    *witver = data[0];
+    if (data[0] == 0 && enc != BECH32_ENCODING_BECH32) return 0;
+    if (data[0] > 0 && enc != BECH32_ENCODING_BECH32M) return 0;
 
     if(hrp_out) {
         strncpy(hrp_out, hrp_actual, 20);
     }
-    if(enc_out) *enc_out = enc;
 
     return 1;
 }
@@ -219,14 +221,11 @@ int segwit_addr_decode_detailed(int* witver, uint8_t* witdata, size_t* witdata_l
 int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr) {
 
     char hrp_actual[84];
-    bech32_encoding enc;
 
-    int ok = segwit_addr_decode_detailed(witver, witdata, witdata_len, hrp_actual, &enc, addr);
+    int ok = segwit_addr_decode_detailed(witver, witdata, witdata_len, hrp_actual, addr);
     if (!ok) return 0;
 
     if (strncmp(hrp, hrp_actual, 84) != 0) return 0;
-    if ((*witver) == 0 && enc != BECH32_ENCODING_BECH32) return 0;
-    if ((*witver) > 0 && enc != BECH32_ENCODING_BECH32M) return 0;
 
     return 1;
 }
