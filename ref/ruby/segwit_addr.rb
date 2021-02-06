@@ -37,27 +37,26 @@ class SegwitAddr
 
   def scriptpubkey=(script)
     values = [script].pack('H*').unpack("C*")
-    @ver = values[0]
+    @ver = values[0] == 0 ? values[0] : values[0] - 0x50
     @prog = values[2..-1]
   end
 
   def addr
-    encoded = Bech32.encode(hrp, [ver] + convert_bits(prog, 8, 5))
-    chrp, cver, cprog = parse_addr(encoded)
-    raise 'Invalid address' if chrp != hrp || cver != ver || cprog != prog
-    encoded
+    spec = (ver == 0 ? Bech32::Encoding::BECH32 : Bech32::Encoding::BECH32M)
+    Bech32.encode(hrp, [ver] + convert_bits(prog, 8, 5), spec)
   end
 
   private
 
   def parse_addr(addr)
-    hrp, data = Bech32.decode(addr)
+    hrp, data, spec = Bech32.decode(addr)
     raise 'Invalid address.' if hrp.nil? || data[0].nil? || (hrp != 'bc' && hrp != 'tb')
     ver = data[0]
     raise 'Invalid witness version' if ver > 16
     prog = convert_bits(data[1..-1], 5, 8, false)
     raise 'Invalid witness program' if prog.nil? || prog.length < 2 || prog.length > 40
     raise 'Invalid witness program with version 0' if ver == 0 && (prog.length != 20 && prog.length != 32)
+    raise 'Witness version and encoding spec do not match' if (ver == 0 && spec != Bech32::Encoding::BECH32) || (ver != 0 && spec != Bech32::Encoding::BECH32M)
     [hrp, ver, prog]
   end
 
