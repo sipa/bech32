@@ -124,8 +124,6 @@ pub enum AddressError {
     Conversion(BitConversionError),
     /// The provided human-readable portion does not match
     HumanReadableMismatch,
-    /// The human-readable part is invalid (must be "bc" or "tb")
-    InvalidHumanReadablePart,
 }
 
 #[doc(hidden)]
@@ -315,10 +313,6 @@ mod tests {
         let pairs: Vec<(&str, AddressError)> = vec!(
             // BIP-0173 Invalid Addresses
             (
-                "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
-                AddressError::InvalidHumanReadablePart,
-            ),
-            (
                 "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5",
                 CodingError::InvalidChecksum.into(),
             ),
@@ -348,10 +342,6 @@ mod tests {
                 BitConversionError::InvalidPadding.into(),
             ),
             // BIP-0350 Invalid Addresses
-            (
-                "tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq5zuyut",
-                AddressError::InvalidHumanReadablePart,
-            ),
             (
                 "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqh2y7hd",
                 WitnessProgramError::InvalidEncoding.into(),

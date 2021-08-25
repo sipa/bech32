@@ -94,12 +94,8 @@ impl WitnessProgram {
     /// Decodes a segwit address into a Witness Program
     ///
     /// Verifies that the `address` contains the expected human-readable part
-    /// `hrp` and decodes as proper Bech32-encoded string. Allowed values of
-    /// the human-readable part are 'bc' and 'tb' and 'bcrt'.
+    /// `hrp` and decodes as proper Bech32-encoded string.
     pub fn from_address(hrp: String, address: String) -> DecodeResult {
-        if hrp != "bc".to_string() && hrp != "tb".to_string() && hrp != "bcrt" {
-            return Err(AddressError::InvalidHumanReadablePart)
-        }
         let b32 = match Bech32::from_string(address) {
             Ok(b) => b,
             Err(e) => return Err(AddressError::Bech32(e)),
