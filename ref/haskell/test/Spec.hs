@@ -64,8 +64,7 @@ invalidAddresses = map BSC.pack
     ]
 
 hexDecode :: BS.ByteString -> BS.ByteString
-hexDecode s = let (ret, rest) = B16.decode s
-              in if BS.null rest then ret else undefined
+hexDecode s = either error id $ B16.decode s
 
 segwitScriptPubkey :: Word8 -> [Word8] -> BS.ByteString
 segwitScriptPubkey witver witprog = BS.pack $ witver' : (fromIntegral $ length witprog) : witprog
