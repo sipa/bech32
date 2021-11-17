@@ -2,9 +2,11 @@ module Codec.Binary.Bech32
   (
     DecodeError(..)
   , EncodeError(..)
+  , Bech32Type(..)
 
   , bech32Encode
   , bech32Decode
+  , bech32Spec
   , toBase32
   , toBase256
   , segwitEncode
@@ -72,24 +74,24 @@ bech32Polymod values = foldl' go 1 values .&. 0x3fffffff
 bech32HRPExpand :: HRP -> [Word5]
 bech32HRPExpand hrp = map (UnsafeWord5 . (.>>. 5)) (BS.unpack hrp) ++ [UnsafeWord5 0] ++ map word5 (BS.unpack hrp)
 
-bech32CreateChecksum :: HRP -> [Word5] -> [Word5]
-bech32CreateChecksum hrp dat = [word5 (polymod .>>. i) | i <- [25,20..0]]
+bech32CreateChecksum :: Word -> HRP -> [Word5] -> [Word5]
+bech32CreateChecksum residue hrp dat = [word5 (polymod .>>. i) | i <- [25,20..0]]
   where
     values = bech32HRPExpand hrp ++ dat
-    polymod = bech32Polymod (values ++ map UnsafeWord5 [0, 0, 0, 0, 0, 0]) `xor` 1
+    polymod = bech32Polymod (values ++ map UnsafeWord5 [0, 0, 0, 0, 0, 0]) `xor` residue
 
-bech32VerifyChecksum :: HRP -> [Word5] -> Bool
-bech32VerifyChecksum hrp dat = bech32Polymod (bech32HRPExpand hrp ++ dat) == 1
+bech32Residue :: HRP -> [Word5] -> Word
+bech32Residue hrp dat = bech32Polymod (bech32HRPExpand hrp ++ dat)
 
 data EncodeError =
       ResultStringLengthExceeded
     | InvalidHumanReadablePart
     deriving (Show, Eq)
 
-bech32Encode :: HRP -> [Word5] -> Either EncodeError BS.ByteString
-bech32Encode hrp dat = do
+bech32Encode :: Word -> HRP -> [Word5] -> Either EncodeError BS.ByteString
+bech32Encode residue hrp dat = do
     verify InvalidHumanReadablePart $ validHRP hrp
-    let dat' = dat ++ bech32CreateChecksum hrp dat
+    let dat' = dat ++ bech32CreateChecksum residue hrp dat
         rest = map (charset Arr.!) dat'
         result = BSC.concat [BSC.map toLower hrp, BSC.pack "1", BSC.pack rest]
     verify ResultStringLengthExceeded $ BS.length result <= 90
@@ -107,7 +109,7 @@ data DecodeError =
   | InvalidCharsetMap
   deriving (Show, Eq)
 
-bech32Decode :: BS.ByteString -> Either DecodeError (HRP, [Word5])
+bech32Decode :: BS.ByteString -> Either DecodeError (Word, HRP, [Word5])
 bech32Decode bech32 = do
     verify Bech32StringLengthExceeded $ BS.length bech32 <= 90
     verify CaseInconsistency $ validCase bech32
@@ -116,8 +118,8 @@ bech32Decode bech32 = do
     hrp' <- maybeToRight InvalidHRP $ BSC.stripSuffix (BSC.pack "1") hrp
     verify InvalidHRP $ validHRP hrp'
     dat' <- maybeToRight InvalidCharsetMap . mapM charsetMap $ BSC.unpack dat
-    verify ChecksumVerificationFail $ bech32VerifyChecksum hrp' dat'
-    return (hrp', take (BS.length dat - 6) dat')
+    let residue = bech32Residue hrp' dat'
+    return (residue, hrp', take (BS.length dat - 6) dat')
       where
         validCase :: BS.ByteString -> Bool
         validCase b32 = BSC.map toUpper b32 == b32 || BSC.map toLower b32 == b32
@@ -158,26 +160,34 @@ toBase32 dat = map word5 $ runIdentity $ convertBits (map fromIntegral dat) 8 5 
 toBase256 :: [Word5] -> Maybe [Word8]
 toBase256 dat = fmap (map fromIntegral) $ convertBits (map fromWord5 dat) 5 8 noPadding
 
-segwitCheck :: Word8 -> Data -> Bool
-segwitCheck witver witprog =
-    witver <= 16 &&
+data Bech32Type = Bech32
+                | Bech32m
+
+bech32Spec :: Bech32Type -> Word
+bech32Spec Bech32 = 1
+bech32Spec Bech32m = 0x2bc830a3
+
+segwitCheck :: Word8 -> Data -> Maybe Bech32Type
+segwitCheck witver witprog = do
+    guard $ witver <= 16
     if witver == 0
-    then length witprog == 20 || length witprog == 32
-    else length witprog >= 2 && length witprog <= 40
+    then guard (length witprog == 20 || length witprog == 32) >> return Bech32
+    else guard (length witprog >= 2 && length witprog <= 40) >> return Bech32m
 
 segwitDecode :: HRP -> BS.ByteString -> Maybe (Word8, Data)
 segwitDecode hrp addr = do
-    (hrp', dat) <- rightToMaybe $ bech32Decode addr
+    (residue, hrp', dat) <- rightToMaybe $ bech32Decode addr
     guard $ (hrp == hrp') && not (null dat)
     let (UnsafeWord5 witver : datBase32) = dat
     decoded <- toBase256 datBase32
-    guard $ segwitCheck witver decoded
+    b32type <- segwitCheck witver decoded
+    guard $ bech32Spec b32type == residue
     return (witver, decoded)
 
 segwitEncode :: HRP -> Word8 -> Data -> Maybe BS.ByteString
 segwitEncode hrp witver witprog = do
-    guard $ segwitCheck witver witprog
-    rightToMaybe $ bech32Encode hrp $ UnsafeWord5 witver : toBase32 witprog
+    b32type <- segwitCheck witver witprog
+    rightToMaybe $ bech32Encode (bech32Spec b32type) hrp $ UnsafeWord5 witver : toBase32 witprog
 
 rightToMaybe :: Either l r -> Maybe r
 rightToMaybe = either (const Nothing) Just
