@@ -26,6 +26,13 @@ import (
 	"testing"
 )
 
+const (
+	encBech32  = 1
+	encBech32m = 2
+)
+
+var encoding = []int{encBech32, encBech32m}
+
 func segwitScriptpubkey(version int, program []int) []int {
 	if version != 0 {
 		version += 0x50
@@ -33,23 +40,58 @@ func segwitScriptpubkey(version int, program []int) []int {
 	return append(append([]int{version}, len(program)), program...)
 }
 
-var validChecksum = []string{
+var validBech32 = []string{
 	"A12UEL5L",
+	"a12uel5l",
 	"an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
 	"abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
 	"11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j",
 	"split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
+	"?1ezyfcl",
 }
 
-var invalidChecksum = []string{
-	" 1nwldj5",
-	"\x7F" + "1axkwrx",
+var validBech32m = []string{
+	"A1LQFN3A",
+	"a1lqfn3a",
+	"an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11sg7hg6",
+	"abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx",
+	"11llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllludsr8",
+	"split1checkupstagehandshakeupstreamerranterredcaperredlc445v",
+	"?1v759aa",
+}
+
+var invalidBech32 = []string{
+	" 1nwldj5",         // HRP character out of range
+	"\x7F" + "1axkwrx", // HRP character out of range
+	"\x80" + "1eym55h", // HRP character out of range
+	// overall max length exceeded
 	"an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
-	"pzry9x0s0muk",
-	"1pzry9x0s0muk",
-	"x1b4n0q5v",
-	"li1dgmt3",
-	"de1lg7wt\xFF",
+	"pzry9x0s0muk",      // No separator character
+	"1pzry9x0s0muk",     // Empty HRP
+	"x1b4n0q5v",         // Invalid data character
+	"li1dgmt3",          // Too short checksum
+	"de1lg7wt" + "\xFF", // Invalid character in checksum
+	"A1G7SGD8",          // checksum calculated with uppercase form of HRP
+	"10a06t8",           // empty HRP
+	"1qzzfhee",          // empty HRP
+}
+
+var invalidBech32m = []string{
+	" 1xj0phk",         // HRP character out of range
+	"\x7F" + "1g6xzxy", // HRP character out of range
+	"\x80" + "1vctc34", // HRP character out of range
+	// overall max length exceeded
+	"an84characterslonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11d6pts4",
+	"qyrz8wqd2c9m",  // No separator character
+	"1qyrz8wqd2c9m", // Empty HRP
+	"y1b0jsk6g",     // Invalid data character
+	"lt1igcx5c0",    // Invalid data character
+	"in1muywd",      // Too short checksum
+	"mm1crxm3i",     // Invalid character in checksum
+	"au1s5cgom",     // Invalid character in checksum
+	"M1VUXWEZ",      // Checksum calculated with uppercase form of HRP
+	"16plkw9",       // Empty HRP
+	"1p2gdwpf",      // Empty HRP
 }
 
 type item struct {
@@ -72,7 +114,7 @@ var validAddress = []item{
 			0x62,
 		},
 	},
-	item{"bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx",
+	item{"bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kt5nd6y",
 		[]int{
 			0x51, 0x28, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54,
 			0x94, 0x1c, 0x45, 0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6,
@@ -80,12 +122,12 @@ var validAddress = []item{
 			0x45, 0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6,
 		},
 	},
-	item{"BC1SW50QA3JX3S",
+	item{"BC1SW50QGDZ25J",
 		[]int{
 			0x60, 0x02, 0x75, 0x1e,
 		},
 	},
-	item{"bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj",
+	item{"bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs",
 		[]int{
 			0x52, 0x10, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54,
 			0x94, 0x1c, 0x45, 0xd1, 0xb3, 0xa3, 0x23,
@@ -102,36 +144,74 @@ var validAddress = []item{
 }
 
 var invalidAddress = []string{
-	"tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
-	"bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5",
-	"BC13W508D6QEJXTDG4Y5R3ZARVARY0C5XW7KN40WF2",
-	"bc1rw5uspcuh",
-	"bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7kw5rljs90",
+	// Invalid HRP
+	"tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq5zuyut",
+	// Invalid checksum algorithm (bech32 instead of bech32m)
+	"bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqh2y7hd",
+	// Invalid checksum algorithm (bech32 instead of bech32m)
+	"tb1z0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqglt7rf",
+	// Invalid checksum algorithm (bech32 instead of bech32m)
+	"BC1S0XLXVLHEMJA6C4DQV22UAPCTQUPFHLXM9H8Z3K2E72Q4K9HCZ7VQ54WELL",
+	// Invalid checksum algorithm (bech32m instead of bech32)
+	"bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kemeawh",
+	// Invalid checksum algorithm (bech32m instead of bech32)
+	"tb1q0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq24jc47",
+	// Invalid character in checksum
+	"bc1p38j9r5y49hruaue7wxjce0updqjuyyx0kh56v8s25huc6995vvpql3jow4",
+	// Invalid witness version
+	"BC130XLXVLHEMJA6C4DQV22UAPCTQUPFHLXM9H8Z3K2E72Q4K9HCZ7VQ7ZWS8R",
+	// Invalid program length (1 byte)
+	"bc1pw5dgrnzv",
+	// Invalid program length (41 bytes)
+	"bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v8n0nx0muaewav253zgeav",
+	// Invalid program length for witness version 0 (per BIP141)
 	"BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P",
-	"tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-	"bc1zw508d6qejxtdg4y5r3zarvaryvqyzf3du",
-	"tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
+	// Mixed case
+	"tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47Zagq",
+	// More than 4 padding bits
+	"bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7v07qwwzcrf",
+	// Non-zero padding in 8-to-5 conversion
+	"tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vpggkg4j",
+	// Empty data section
 	"bc1gmk9yu",
 }
 
 func TestValidChecksum(t *testing.T) {
-	for _, test := range validChecksum {
-		hrp, data, err := bech32.Decode(test)
-		if err != nil {
-			t.Errorf("Valid checksum for %s : FAIL / error %+v\n", test, err)
+	var tests []string
+	for _, spec := range encoding {
+		if spec == encBech32 {
+			tests = validBech32
 		} else {
-			t.Logf("Valid checksum for %s : ok / hrp : %+v , data : %+v\n", test, hrp, data)
+			tests = validBech32m
+		}
+
+		for _, test := range tests {
+			hrp, data, spec, err := bech32.Decode(test)
+			if err != nil {
+				t.Errorf("Valid checksum for %s : FAIL / error %+v\n", test, err)
+			} else {
+				t.Logf("Valid checksum for %s : ok / hrp : %+v , data : %+v, spec : %+v\n", test, hrp, data, spec)
+			}
 		}
 	}
 }
 
 func TestInvalidChecksum(t *testing.T) {
-	for _, test := range invalidChecksum {
-		hrp, data, err := bech32.Decode(test)
-		if err != nil {
-			t.Logf("Invalid checksum for %s : ok / hrp : %+v , data : %+v\n", test, hrp, data)
+	var tests []string
+	for _, spec := range encoding {
+		if spec == encBech32 {
+			tests = validBech32
 		} else {
-			t.Errorf("Invalid checksum for %s : FAIL\n", test)
+			tests = validBech32m
+		}
+
+		for _, test := range tests {
+			hrp, data, spec, err := bech32.Decode(test)
+			if err != nil {
+				t.Errorf("Invalid checksum for %s : ok / hrp : %+v , data : %+v, spec : %+v\n", test, hrp, data, spec)
+			} else {
+				t.Logf("Invalid checksum for %s : FAIL\n", test)
+			}
 		}
 	}
 }
@@ -269,43 +349,43 @@ func TestCoverage(t *testing.T) {
 	}
 
 	// Decode
-	_, _, err = bech32.Decode("!~1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc356v3")
+	_, _, _, err = bech32.Decode("!~1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc356v3")
 	if err != nil {
 		t.Errorf("Coverage Decode normal case : FAIL / error :%v", err)
 	} else {
 		t.Log("Coverage Decode normal case : ok")
 	}
-	_, _, err = bech32.Decode("a1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
+	_, _, _, err = bech32.Decode("a1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
 	if err == nil {
 		t.Errorf("Coverage Decode too long error case : FAIL")
 	} else {
 		t.Log("Coverage Decode too long error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("1")
+	_, _, _, err = bech32.Decode("1")
 	if err == nil {
 		t.Errorf("Coverage Decode separator '1' at invalid position error case : FAIL")
 	} else {
 		t.Log("Coverage Decode separator '1' at invalid position error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("a1qqqqq")
+	_, _, _, err = bech32.Decode("a1qqqqq")
 	if err == nil {
 		t.Errorf("Coverage Decode separator '1' at invalid position error case : FAIL")
 	} else {
 		t.Log("Coverage Decode separator '1' at invalid position error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("a" + string(32) + "1qqqqqq")
+	_, _, _, err = bech32.Decode("a" + string(rune(32)) + "1qqqqqq")
 	if err == nil {
 		t.Errorf("Coverage Decode invalid character human-readable part error case : FAIL")
 	} else {
 		t.Log("Coverage Decode invalid character human-readable part error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("a" + string(127) + "1qqqqqq")
+	_, _, _, err = bech32.Decode("a" + string(rune(127)) + "1qqqqqq")
 	if err == nil {
 		t.Errorf("Coverage Decode invalid character human-readable part error case : FAIL")
 	} else {
 		t.Log("Coverage Decode invalid character human-readable part error case : ok / error :", err)
 	}
-	_, _, err = bech32.Decode("a1qqqqqb")
+	_, _, _, err = bech32.Decode("a1qqqqqb")
 	if err == nil {
 		t.Errorf("Coverage Decode invalid character data part error case : FAIL")
 	} else {
@@ -315,14 +395,14 @@ func TestCoverage(t *testing.T) {
 	// Encode
 	hrp = "bc"
 	data = []int{}
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err != nil || bech32String != strings.ToLower(bech32String) {
 		t.Errorf("Coverage Encode lower case : FAIL / bech32String : %v , error : %v", bech32String, err)
 	} else {
 		t.Log("Coverage Encode lower case : ok / bech32String : ", bech32String)
 	}
 	hrp = "BC"
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err != nil || bech32String != strings.ToUpper(bech32String) {
 		t.Errorf("Coverage Encode upper case : FAIL / bech32String : %v , error : %v", bech32String, err)
 	} else {
@@ -330,7 +410,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "bc"
 	data = make([]int, 90-7-len(hrp)+1)
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err == nil {
 		t.Errorf("Coverage Encode too long error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -338,7 +418,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = ""
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid hrp error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -346,31 +426,31 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "Bc"
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err == nil {
 		t.Errorf("Coverage Encode mix case error case : FAIL / bech32String : %v", bech32String)
 	} else {
 		t.Log("Coverage Encode mix case error case : ok / error : ", err)
 	}
-	hrp = string(33) + string(126)
+	hrp = string(rune(33)) + string(rune(126))
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err != nil {
 		t.Errorf("Coverage Encode normal case : FAIL / error : %v", err)
 	} else {
 		t.Log("Coverage Encode normal case : ok / bech32String : ", bech32String)
 	}
-	hrp = string(32) + "c"
+	hrp = string(rune(32)) + "c"
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid character human-readable part error case : FAIL / bech32String : %v", bech32String)
 	} else {
 		t.Log("Coverage Encode invalid character human-readable part error case : ok / error : ", err)
 	}
-	hrp = "b" + string(127)
+	hrp = "b" + string(rune(127))
 	data = make([]int, 90-7-len(hrp))
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid character human-readable part error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -378,7 +458,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "bc"
 	data = []int{0, 31}
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err != nil {
 		t.Errorf("Coverage Encode normal case : FAIL / error : %v", err)
 	} else {
@@ -386,7 +466,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "bc"
 	data = []int{-1}
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid data error case : FAIL / bech32String : %v", bech32String)
 	} else {
@@ -394,7 +474,7 @@ func TestCoverage(t *testing.T) {
 	}
 	hrp = "bc"
 	data = []int{32}
-	bech32String, err = bech32.Encode(hrp, data)
+	bech32String, err = bech32.Encode(hrp, data, encBech32)
 	if err == nil {
 		t.Errorf("Coverage Encode invalid data error case : FAIL / bech32String : %v", bech32String)
 	} else {
