@@ -84,7 +84,7 @@ function encode (hrp, version, program) {
     enc = bech32.encodings.BECH32M;
   }
   var ret = bech32.encode(hrp, [version].concat(convertbits(program, 8, 5, true)), enc);
-  if (decode(hrp, ret, enc) === null) {
+  if (decode(hrp, ret) === null) {
     return null;
   }
   return ret;
