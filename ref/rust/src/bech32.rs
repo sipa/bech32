@@ -21,14 +21,15 @@
 // Bech32 { hrp: "bech32", data: [0, 1, 2] }->"bech321qpz4nc4pe"
 
 //! Encode and decode the Bech32 format, with checksums
-//! 
+//!
 //! # Examples
 //! ```rust
-//! use bech32::bech32::Bech32;
-//! 
+//! use bech32::bech32::{Bech32, Variant};
+//!
 //! let b = Bech32 {
-//!     hrp: "bech32".to_string(), 
-//!     data: vec![0x00, 0x01, 0x02] 
+//!     hrp: "bech32".to_string(),
+//!     data: vec![0x00, 0x01, 0x02],
+//!     variant: Variant::Bech32,
 //! };
 //! let encode = b.to_string().unwrap();
 //! assert_eq!(encode, "bech321qpz4nc4pe".to_string());
@@ -43,7 +44,39 @@ pub struct Bech32 {
     /// Human-readable part
     pub hrp: String,
     /// Data payload
-    pub data: Vec<u8>
+    pub data: Vec<u8>,
+    /// Variant of bech32 used
+    pub variant: Variant,
+}
+
+/// Used for encode/decode operations for the two variants of Bech32
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Variant {
+    /// The original Bech32 described in [BIP-0173](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki)
+    Bech32,
+    /// The improved Bech32m variant described in [BIP-0350](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki)
+    Bech32m,
+}
+
+const BECH32_CONST: u32 = 1;
+const BECH32M_CONST: u32 = 0x2bc830a3;
+
+impl Variant {
+    // Produce the variant based on the remainder of the polymod operation
+    fn from_remainder(c: u32) -> Option<Self> {
+        match c {
+            BECH32_CONST => Some(Variant::Bech32),
+            BECH32M_CONST => Some(Variant::Bech32m),
+            _ => None,
+        }
+    }
+
+    fn constant(self) -> u32 {
+        match self {
+            Variant::Bech32 => BECH32_CONST,
+            Variant::Bech32m => BECH32M_CONST,
+        }
+    }
 }
 
 // Human-readable part and data part separator
@@ -80,7 +113,7 @@ impl Bech32 {
         }
         let hrp_bytes: Vec<u8> = self.hrp.clone().into_bytes();
         let mut combined: Vec<u8> = self.data.clone();
-        combined.extend_from_slice(&create_checksum(&hrp_bytes, &self.data));
+        combined.extend_from_slice(&create_checksum(&hrp_bytes, &self.data, self.variant));
         let mut encoded: String = format!("{}{}", self.hrp, SEP);
         for p in combined {
             if p >= 32 {
@@ -165,27 +198,28 @@ impl Bech32 {
         }
 
         // Ensure checksum
-        if !verify_checksum(&hrp_bytes, &data_bytes) {
-            return Err(CodingError::InvalidChecksum)
+        match verify_checksum(&hrp_bytes, &data_bytes) {
+            Some(variant) => {
+                // Remove checksum from data payload
+                let dbl: usize = data_bytes.len();
+                data_bytes.truncate(dbl - 6);
+                Ok(Bech32 {
+                    hrp: String::from_utf8(hrp_bytes).unwrap(),
+                    data: data_bytes,
+                    variant: variant,
+                })
+            }
+            None => Err(CodingError::InvalidChecksum),
         }
-
-        // Remove checksum from data payload
-        let dbl: usize = data_bytes.len();
-        data_bytes.truncate(dbl - 6);
-
-        Ok(Bech32 {
-            hrp: String::from_utf8(hrp_bytes).unwrap(),
-            data: data_bytes
-        })
     }
 }
 
-fn create_checksum(hrp: &Vec<u8>, data: &Vec<u8>) -> Vec<u8> {
+fn create_checksum(hrp: &Vec<u8>, data: &Vec<u8>, variant: Variant) -> Vec<u8> {
     let mut values: Vec<u8> = hrp_expand(hrp);
     values.extend_from_slice(data);
     // Pad with 6 zeros
     values.extend_from_slice(&[0u8; 6]);
-    let plm: u32 = polymod(values) ^ 1;
+    let plm: u32 = polymod(values) ^ variant.constant();
     let mut checksum: Vec<u8> = Vec::new();
     for p in 0..6 {
         checksum.push(((plm >> 5 * (5 - p)) & 0x1f) as u8);
@@ -193,10 +227,10 @@ fn create_checksum(hrp: &Vec<u8>, data: &Vec<u8>) -> Vec<u8> {
     checksum
 }
 
-fn verify_checksum(hrp: &Vec<u8>, data: &Vec<u8>) -> bool {
+fn verify_checksum(hrp: &Vec<u8>, data: &Vec<u8>) -> Option<Variant> {
     let mut exp = hrp_expand(hrp);
     exp.extend_from_slice(data);
-    polymod(exp) == 1u32
+    Variant::from_remainder(polymod(exp))
 }
 
 fn hrp_expand(hrp: &Vec<u8>) -> Vec<u8> {

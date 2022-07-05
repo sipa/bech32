@@ -20,27 +20,27 @@
 
 //! Segregated Witness address encoding and decoding from and to a
 //! Witness Program.
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! ```rust
 //! use bech32::wit_prog::WitnessProgram;
-//! 
+//!
 //! let witness_program = WitnessProgram {
 //!     version: 0,
 //!     program: vec![
 //!                 0x75, 0x1e, 0x76, 0xe8, 0x19,
 //!                 0x91, 0x96, 0xd4, 0x54, 0x94,
-//!                 0x1c, 0x45, 0xd1, 0xb3, 0xa3, 
+//!                 0x1c, 0x45, 0xd1, 0xb3, 0xa3,
 //!                 0x23, 0xf1, 0x43, 0x3b, 0xd6 ]
 //! };
-//! 
+//!
 //! let enc_result = witness_program.to_address("bc".to_string());
-//! assert_eq!(enc_result.unwrap(), 
+//! assert_eq!(enc_result.unwrap(),
 //!     "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4".to_string());
 //! ```
 
-use bech32::Bech32;
+use bech32::{Bech32, Variant};
 use super::CodingError;
 use super::AddressError;
 use super::ScriptPubKeyError;
@@ -77,7 +77,11 @@ impl WitnessProgram {
         };
         // let p5 = convert_bits(self.program.to_vec(), 8, 5, true)?;
         data.extend_from_slice(&p5);
-        let b32 = Bech32 {hrp: hrp.clone(), data: data};
+        let b32 = Bech32 {
+            hrp: hrp.clone(),
+            data: data,
+            variant: if self.version == 0 { Variant::Bech32 } else { Variant::Bech32m },
+        };
         let address = match b32.to_string() {
             Ok(s) => s,
             Err(e) => return Err(AddressError::Bech32(e))
@@ -89,13 +93,9 @@ impl WitnessProgram {
 
     /// Decodes a segwit address into a Witness Program
     ///
-    /// Verifies that the `address` contains the expected human-readable part 
-    /// `hrp` and decodes as proper Bech32-encoded string. Allowed values of
-    /// the human-readable part are 'bc' and 'tb'.
+    /// Verifies that the `address` contains the expected human-readable part
+    /// `hrp` and decodes as proper Bech32-encoded string.
     pub fn from_address(hrp: String, address: String) -> DecodeResult {
-        if hrp != "bc".to_string() && hrp != "tb".to_string() {
-            return Err(AddressError::InvalidHumanReadablePart)
-        }
         let b32 = match Bech32::from_string(address) {
             Ok(b) => b,
             Err(e) => return Err(AddressError::Bech32(e)),
@@ -116,15 +116,17 @@ impl WitnessProgram {
                 Err(e) => return Err(AddressError::Conversion(e))
             }
         };
-        match wp.validate() {
-            Ok(_) => Ok(wp),
-            Err(e) => Err(AddressError::WitnessProgram(e))
+        wp.validate()?;
+        match (wp.version, b32.variant) {
+            (0, Variant::Bech32) => Ok(wp),
+            (x, Variant::Bech32m) if x > 0 => Ok(wp),
+            _ => Err(AddressError::WitnessProgram(WitnessProgramError::InvalidEncoding)),
         }
     }
 
     /// Converts a `WitnessProgram` to a script public key
     ///
-    /// The format for the output is 
+    /// The format for the output is
     /// `[version, program length, <program>]`
     pub fn to_scriptpubkey(&self) -> Vec<u8> {
         let mut pubkey: Vec<u8> = Vec::new();
@@ -140,7 +142,7 @@ impl WitnessProgram {
 
     /// Extracts a WitnessProgram out of a provided script public key
     pub fn from_scriptpubkey(pubkey: &[u8]) -> PubKeyResult {
-        // We need a version byte and a program length byte, with a program at 
+        // We need a version byte and a program length byte, with a program at
         // least 2 bytes long.
         if pubkey.len() < 4 {
             return Err(ScriptPubKeyError::TooShort)
@@ -172,7 +174,7 @@ impl WitnessProgram {
             return Err(WitnessProgramError::InvalidLength)
         }
         // Check proper script length
-        if self.version == 0 && 
+        if self.version == 0 &&
                 self.program.len() != 20 && self.program.len() != 32 {
             return Err(WitnessProgramError::InvalidVersionLength)
         }
