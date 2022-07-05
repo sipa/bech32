@@ -112,6 +112,6 @@ tests = testGroup "Tests"
           assertBool "empty HRP encode" $ isNothing $ bech32Encode (BSC.pack "") []
           assertBool "empty HRP decode" $ isNothing $ bech32Decode (BSC.pack "10a06t8")
           assertEqual "hrp lowercased"
-              (Just $ BSC.pack "hrp1g9xj8m")
+              (Just $ BSC.pack "hrp1vhqs52")
               (bech32Encode (BSC.pack "HRP") [])
     ]
