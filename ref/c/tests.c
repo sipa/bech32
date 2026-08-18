@@ -309,6 +309,28 @@ int main(void) {
             ++fail;
         }
     }
+    {
+        static const uint8_t program[20] = {0};
+        static const char hrp_19[] = "abcdefghijklmnopqrs";
+        static const char hrp_20[] = "abcdefghijklmnopqrst";
+        char address[93];
+        char hrp_out[20];
+        uint8_t witprog[40];
+        size_t witprog_len;
+        int witver;
+
+        if (!segwit_addr_encode(address, hrp_19, 0, program, sizeof(program)) ||
+            !segwit_addr_decode_detailed(&witver, witprog, &witprog_len, hrp_out, address) ||
+            strcmp(hrp_out, hrp_19)) {
+            printf("segwit_addr_decode_detailed fails on 19-character HRP\n");
+            ++fail;
+        }
+        if (!segwit_addr_encode(address, hrp_20, 0, program, sizeof(program)) ||
+            segwit_addr_decode_detailed(&witver, witprog, &witprog_len, hrp_out, address)) {
+            printf("segwit_addr_decode_detailed accepts 20-character HRP\n");
+            ++fail;
+        }
+    }
     printf("%i failures\n", fail);
     return fail != 0;
 }
