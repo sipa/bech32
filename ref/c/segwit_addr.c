@@ -39,6 +39,7 @@ static uint32_t bech32_final_constant(bech32_encoding enc) {
     if (enc == BECH32_ENCODING_BECH32) return 1;
     if (enc == BECH32_ENCODING_BECH32M) return 0x2bc830a3;
     assert(0);
+    return 0;
 }
 
 static const char* charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
